@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
+        <!-- Main theme colors -->
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/SeaBlue</item>
+        <item name="colorPrimaryVariant">@color/BlueGreen</item>
+        <item name="colorOnPrimary">@color/TiffanyBlue</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/TiffanyBlue2</item>
+        <item name="colorSecondaryVariant">@color/Eucalyptus2</item>
+        <item name="colorOnSecondary">@color/LightGreen</item>
+        <!--Action bar style-->
+        <item name="android:actionBarStyle">@style/AppTheme.ActionBar</item>
+        <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
+        <!--backgroundcolors-->
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="android:alertDialogTheme">@style/AlertDialogTheme</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+        <item name="android:buttonBarNeutralButtonStyle">@style/NeutralButtonStyle</item>
+    </style>
+
+    <style name="AppTheme.ActionBar" parent="Widget.AppCompat.Light.ActionBar">
+        <item name="android:titleTextStyle">@style/AppTheme.ActionBar.TitleText</item>
+        <item name="android:subtitleTextStyle">@style/AppTheme.ActionBar.SubTitleText</item>
+        <item name="android:statusBarColor">@color/SeaBlue</item>
+        <item name="background">@color/SeaBlue</item>
+        <item name="android:height">58dp</item>
+        <item name="height">58dp</item>
+        <item name="titleTextStyle">@style/AppTheme.ActionBar.TitleText</item>
+        <item name="subtitleTextStyle">@style/AppTheme.ActionBar.SubTitleText</item>
+    </style>
+
+    <!--NOMBRE DE LA APP-->
+    <style name="AppTheme.ActionBar.TitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+    <!--NOMBRE DE LA APP-->
+    <style name="AppTheme.ActionBar.SubTitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Subtitle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+    <!--TEXT STYLE FONDO BLANCO-->
+    <style name="TextInGame" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+    <!--TEXT STYLE OPCIONES DEL SOSPECHOSO-->
+    <style name="TextInGameInterpol" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+    <!--TEXT STYLE RESPUESTAS DEL SOSPECHOSO-->
+    <style name="TextInGameSuspect" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+    <!--TEXT STYLE IDENTIFICACION DEL DETECTIVE-->
+    <style name="TextInGameDetective" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+    <style name="Button1Style" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="android:textColor">@color/white</item>
+        <item name="colorControlHighlight">@color/SeaBlue</item>
+        <item name="colorButtonNormal">@color/SeaBlue</item>
+        <item name="background">@drawable/round_shape_rect</item>
+    </style>
+
+    <style name="Spinner" parent="Widget.AppCompat.Spinner.Underlined">
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/RichBlack</item>
+    </style>
+
+    <style name="AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+    </style>
+
+    <style name="NegativeButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/DeepTuscanRed</item>
+    </style>
+
+    <style name="PositiveButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/DeepTuscanRed</item>
+    </style>
+
+    <style name="NeutralButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/DeepTuscanRed</item>
+    </style>
+
+    <style name="MyDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/black</item>
+        <item name="android:colorAccent">@color/white</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/specialeliteregular</item>
+    </style>
+
+</resources>
