@@ -10,7 +10,6 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:id="@+id/GLMaster"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
@@ -21,14 +20,12 @@
         app:layout_constraintBottom_toTopOf="@+id/GLMasterOptions">
 
         <LinearLayout
-            android:id="@+id/GLIzq"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/RLPaisTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -56,7 +53,6 @@
             </LinearLayout>
 
             <RelativeLayout
-                android:id="@+id/LLImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -64,23 +60,37 @@
 
                 android:background="@drawable/round_shape_rect">
 
-                <TextView
-                    android:id="@+id/TVImage"
-                    style="@style/TextInGame"
+                <LinearLayout
+                    android:id="@+id/LLImageCountry"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="ImagenDelPaisOLugar"
-                    android:visibility="visible">
-                </TextView>
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:visibility="invisible">
+
+                    <TextView
+                        android:id="@+id/tvTextTrivias"
+                        style="@style/TextInGame"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="ImagenDelPaisOLugar">
+                    </TextView>
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                    </ImageView>
+
+                </LinearLayout>
+
 
                 <ScrollView
-                    android:id="@+id/SVIntroMision"
+                    android:id="@+id/SVIntroDetective"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="@dimen/marginsLayouts"
 
-                    android:visibility="invisible"
+                    android:visibility="visible"
 
                     android:fadeScrollbars="false"
                     android:scrollbarAlwaysDrawVerticalTrack="true"
@@ -122,20 +132,31 @@
                             android:text=""
                             style="@style/TextInGameDetective">
                         </TextView>
+                        <Button
+                            android:id="@+id/btIniciar"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/alturaViewsMin"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/round_shape_rect"
+                            android:text="INICIAR"
+                            style="@style/TextInGameInterpol"
+                            android:onClick="initGame">
+                        </Button>
                     </LinearLayout>
                 </ScrollView>
             </RelativeLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/GLDer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:layout_weight="1">
 
             <RelativeLayout
-                android:id="@+id/LLInfoInvestigation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -147,7 +168,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:visibility="visible"
-                    android:text="PALACE GUARD: ..."
+                    android:text=""
                     style="@style/TextInGame">
                 </TextView>
 
@@ -197,7 +218,6 @@
                                 android:orientation="vertical">
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsSex"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -210,7 +230,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsHobby"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -223,7 +242,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsHair"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -236,7 +254,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsFeature"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -249,7 +266,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsAuto"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -339,7 +355,6 @@
                         </LinearLayout>
 
                         <Button
-                            android:id="@+id/BTbuscarEnBaseDeDatos"
                             android:layout_width="wrap_content"
                             android:layout_height="@dimen/alturaViewsMin"
                             android:layout_marginTop="16dp"
@@ -377,7 +392,7 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
-            android:id="@+id/BTOp1"
+            android:id="@+id/btConexiones"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="0"
@@ -388,7 +403,7 @@
             android:onClick="conexiones">
         </Button>
         <Button
-            android:id="@+id/BTOp2"
+            android:id="@+id/btViajar"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="1"
@@ -399,7 +414,7 @@
             android:onClick="viajar">
         </Button>
         <Button
-            android:id="@+id/BTOp3"
+            android:id="@+id/btInvestigar"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="2"
@@ -410,7 +425,7 @@
             android:onClick="investigar">
         </Button>
         <Button
-            android:id="@+id/BTOp4"
+            android:id="@+id/btInterpol"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="3"

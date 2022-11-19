@@ -46,6 +46,7 @@ public class Country {
     this.clues.put(key, clue);
     this.usedClues.put(key, "false");
   }
+
   public void setTrivias(String key, String trivia){
     this.trivias.put(key, trivia);
     this.usedTrivias.put(key, "false");
@@ -79,11 +80,22 @@ public class Country {
   }
   public String getUsedClue(String key){  return usedClues.get(key);  }
 
+  public Integer getCluesProd(){
+    int prod = 0;
+    for(String key : clues.keySet()){
+      if(key.contains("prod")){
+        prod++;
+      }
+    }
+    return prod;
+  }
+
   public String getTrivia(String key) {
     this.usedTrivias.put(key, "true");
     return trivias.get(key);
   }
   public String getUsedTrivia(String key){ return usedTrivias.get(key);  }
+  public int getTotalTrivias(){ return trivias.size(); }
 
   public String getStolenObjs(Integer index){
     String[] values = stolenObjs.values().toArray(new String[0]);
@@ -97,6 +109,8 @@ public class Country {
   }
   public String getRelatedCountry(Integer index) {   return relatedCountries.get(index); }
 
+  public int getTotalPlaces(){ return places.size(); }
+  public String getPlace(String key){ return places.get(key); }
   public String[] getPlaces(){
     return places.values().toArray(new String[0]);
   }

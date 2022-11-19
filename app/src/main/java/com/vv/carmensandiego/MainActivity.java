@@ -1,12 +1,14 @@
 package com.vv.carmensandiego;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import android.util.Log;
@@ -17,21 +19,13 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridLayout;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-
-import com.vv.carmensandiego.detective.Detective;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,25 +43,41 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity{
 
   String TAG = "MAIN";
+  SharedPreferences sharedPref;
+  SharedPreferences.Editor editor;
 
-  //INTEFACE
+  //INTEFACE IZQUIERDO SUPERIOR
   TextView tvPaisActual;
   TextView tvHoraActual;
+  //INTERFACE IZQUIERDO INFERIOR
+  LinearLayout llImageCountry;
+  TextView tvTextTrivias;
+  ScrollView svIntroMision;
   TextView tvWritingIntro;
   TextView tvIntroMision;
-  TextView tvIntroSuspectTitulo;
   EditText ETdetectiveName;
+  Button btIniciar;
 
+  //INTEFACE DERECHO
+  TextView tvIntroSuspectTitulo;
   TextView TVInfoInvestigacion;
   ScrollView SVInfoSuspects;
+
   AutoCompleteTextView actvSex;
   AutoCompleteTextView actvHobby;
   AutoCompleteTextView actvHair;
   AutoCompleteTextView actvFeature;
   AutoCompleteTextView actvAuto;
 
+  //INTERFACE INFERIOR OPCIONES
+  GridLayout glMasterOptions;
+  Button btConexiones;
+  Button btViajar;
+  Button btInvestigar;
+  Button btInterpol;
+
   //VARIABLE DE INICIO SOSPECHOSOS
-  Object[] objetosSuspects = new Object[util.nombreObjetoSospechosos.length];
+  ArrayList<Suspects> objetosSuspects;
   int idLadron;
   List<String> paisesVisitadosLadron = new ArrayList<String>();;
   String objetoRobado;
@@ -76,7 +86,6 @@ public class MainActivity extends AppCompatActivity{
   Map<String, Integer> nombrePaises = new HashMap<>();
   List<String> lugaresInvestigar  = new ArrayList<String>();
   ArrayList<Country> objetosPaises;
-
 
   //VARIABLES INVESTIGADOR
   String paisActual;
@@ -96,9 +105,17 @@ public class MainActivity extends AppCompatActivity{
 
     Objects.requireNonNull(getSupportActionBar()).hide();
 
-    //INICIALIZAR VARIABLES DE INTERFACE
+    sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+    editor = sharedPref.edit();
+
+    //INICIALIZAR VARIABLES DE INTERFACE IZQUIERDO
+    //SUPERIOR
     tvPaisActual = findViewById(R.id.TVPaisActual);
     tvHoraActual = findViewById(R.id.TVHoraActual);
+    //INFERIOR
+    llImageCountry = findViewById(R.id.LLImageCountry);
+    tvTextTrivias = findViewById(R.id.tvTextTrivias);
+    svIntroMision = findViewById(R.id.SVIntroDetective);
     tvWritingIntro = findViewById(R.id.TVWriterIntro);
     tvIntroMision = findViewById(R.id.TVIntroMision);
     ETdetectiveName = findViewById(R.id.ETDetectiveName);
@@ -108,32 +125,39 @@ public class MainActivity extends AppCompatActivity{
         if(i == EditorInfo.IME_ACTION_DONE){
           // Your action on done
           Log.d("MAIN", "Detective");
-          enviarTextoEntrada();
+          initGame();
         }
         return false;
       }
     });
+    btIniciar = findViewById(R.id.btIniciar);
+    btIniciar.setVisibility(View.INVISIBLE);
+
+    //INICIALIZAR VARIABLES DE INTERFACE DERECHA
+    //INFORMACION TESTIGOS Y NOTAS PAIS
     TVInfoInvestigacion = findViewById(R.id.TVInfoInvestigation);
+    //INFORMACION INTERPOL SOSPECHOSOS
     SVInfoSuspects = findViewById(R.id.SVInfoSuspects);
     tvIntroSuspectTitulo = findViewById(R.id.TVInfoSuspectsTitulo);
+
     setInfoInvestVisible();
+
     actvSex = findViewById(R.id.ACsex);
     actvHobby = findViewById(R.id.AChobby);
     actvHair = findViewById(R.id.AChair);
     actvFeature = findViewById(R.id.ACfeature);
     actvAuto = findViewById(R.id.ACauto);
+
     setAutoCompleteTextViewsOptions();
 
-    //PREGUNTAS INICIALES AL DETECTIVE
-    detective = new Detective();
-    detective.setNivel("1");
-    setTVHoraActual();
+    //INTERFACE OPCIONES INFERIORES
+    glMasterOptions = findViewById(R.id.GLMasterOptions);
+    glMasterOptions.setVisibility(View.INVISIBLE);
+    btConexiones = findViewById(R.id.btConexiones);
+    btViajar = findViewById(R.id.btViajar);
+    btInvestigar = findViewById(R.id.btInvestigar);
+    btInterpol = findViewById(R.id.btInterpol);
 
-    //INICIALIZAR LUGARES
-    initCountries();
-
-    //INICIALIZAR SOSPECHOSOS
-    initSuspects();
   }
 
   @Override
@@ -172,85 +196,160 @@ public class MainActivity extends AppCompatActivity{
     moveTaskToBack(true);
   }
 
+  //FUNCION PARA INICIAR EL JUEGO
+  public void initGame(){
+    setInfoInvestVisible();
+    initMision();
+    //INICIALIZAR DETECTIVE
+    initDetective(ETdetectiveName.getText().toString());
+    //INICIALIZAR PAISES
+    initCountries();
+    //INICIALIZAR SOSPECHOSOS
+    initSuspects();
+    //SET TRIVIAS
+    setTrviasCountry();
+
+    enviarTextoEntrada();
+  }
+
+  //INICIAR ELEMENTOS DEL LAYOUT DEL LADO IZQUIRDO
+  public void initMision(){
+    glMasterOptions.setVisibility(View.INVISIBLE);
+    llImageCountry.setVisibility(View.INVISIBLE);
+    svIntroMision.setVisibility(View.VISIBLE);
+    btIniciar.setVisibility(View.INVISIBLE);
+  }
+  public void initImage(){
+    glMasterOptions.setVisibility(View.VISIBLE);
+    llImageCountry.setVisibility(View.VISIBLE);
+    svIntroMision.setVisibility(View.INVISIBLE);
+  }
+  //FUNCION DE RESPUESTA AL BOTON INICIAR AL FINAL DEL TEXTO MISION
+  public void initGame(View view){
+    //ESCONDER VIEWS
+    initImage();
+    setTVPaisActual();
+  }
+
+  //SET LINEAR LAYOUTS INFO
+  public void setInfoInvestVisible(){
+    TVInfoInvestigacion.setVisibility(View.VISIBLE);
+    TVInfoInvestigacion.setText("");
+    tvIntroSuspectTitulo.setVisibility(View.INVISIBLE);
+    SVInfoSuspects.setVisibility(View.INVISIBLE);
+  }
+  public void setInfoSuspectstVisible(){
+    TVInfoInvestigacion.setVisibility(View.INVISIBLE);
+    TVInfoInvestigacion.setText("");
+    tvIntroSuspectTitulo.setVisibility(View.VISIBLE);
+    SVInfoSuspects.setVisibility(View.VISIBLE);
+  }
+  //OPCIONES DE SELECCION DE CARACTERISTICAS DE LOS SOSPECHOSOS
+  public void setAutoCompleteTextViewsOptions(){
+    ArrayAdapter<String> adapter;
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.sexs);
+    actvSex.setAdapter(adapter);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.hobbys);
+    actvHobby.setAdapter(adapter);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.haircolors);
+    actvHair.setAdapter(adapter);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.features);
+    actvFeature.setAdapter(adapter);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.autos);
+    actvAuto.setAdapter(adapter);
+  }
+
+  //INICIALIZAR OBJETO DETECTIVE
+  public void initDetective(String name){
+    //PREGUNTAS INICIALES AL DETECTIVE
+    //TODO OBTENER INFROMACION DE SHERED PREFERENCES
+    //String detectiveName = sharedPref.getString("name", "");
+    String lvl = sharedPref.getString("nivel"+name, null);
+    String rank = sharedPref.getString("rank"+name, null);
+
+    if(lvl == null){      lvl = "1";      editor.putString("nivel"+name, "1");    }
+    if(rank == null){ rank = "OFICIAL";   editor.putString("rank"+name, "OFICIAL"); }
+
+    //OFICIAL, INVESTIGADOR, INSPECTOR, DETECTIVE
+
+    /*
+    Gumshoe	4	Start
+    Jr. Investigator	5	1
+    Investigator	6	4
+    Sr. Investigator	7	7
+    Inspector	8	10
+    Sr. Inspector	9	14
+    Jr. Detective	10	18
+    Detective	11	23
+    Sr. Detective	12	28
+    Master Detective	13	33
+    Super Sleuth	14	Catch Carmen
+   */
+
+    detective = new Detective();
+    detective.setNivel(lvl);
+    detective.setRank(rank);
+    detective.setName(name);
+
+    setTVHoraActual();
+  }
+
   //INICIALIZAR OBJECTOS PAISES
   public void initCountries(){
     objetosPaises = UtilityClassCountries.getInstance().getList();
     for(int i = 0; i < objetosPaises.size(); i++){
       nombrePaises.put(objetosPaises.get(i).getName(), i);
-      Log.d("initCountries", objetosPaises.get(i).getName());
     }
-
-    /*
-    for(int i = 0; i < util.nombreObjetoPaises.length; i++){
-      String nombre = util.nombreObjetoPaises[i];
-      try {
-        Class<?> clazz = Class.forName("com.vv.carmensandiego.paises." + nombre);
-        //objetosPaises[i] = clazz.getDeclaredConstructor().newInstance();
-        //SE GUARDA AL NOMBRE DEL OBJETO Y EL INDICE PARA FACILIDAD DE UBICACION
-        nombrePaises.put(nombre, i);
-      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
-        NoSuchMethodException | InvocationTargetException e) {
-        e.printStackTrace();
-      }
-    }
-
-     */
   }
 
   //INICIALIZAR OBJECTOS SOSPECHOSOS
   public void initSuspects(){
-    //LOOP POR LOS SOSPECHOSOS
-    for(int i = 0; i < util.nombreObjetoSospechosos.length; i++){
-      String nombre = util.nombreObjetoSospechosos[i];
-      try {
-        Class<?> clazz = Class.forName("com.vv.carmensandiego.suspects." + nombre);
-        objetosSuspects[i] = clazz.getDeclaredConstructor().newInstance();
-      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
-                NoSuchMethodException | InvocationTargetException e) {
-        e.printStackTrace();
-      }
-    }
-    /* SELECCIONA UN LADRON
-      https://stackoverflow.com/questions/942326/calling-static-method-on-a-class
-      Method method = className.getDeclaredMethod("getInfo", String.class);
-      method.invoke(instance, "your parameter");
-      Where instance is either: Object instance = null; if the method is static. Or:
-      Object instance = className.getDeclaredConstructor().newInstance();
-      If the method is a member method
-     */
+    objetosSuspects = UtilityClassSuspects.getInstance().getList();
+
     //NUMERO ALEATORIO PARA SELECCIONAR UN LADRON
-    idLadron = new Random().nextInt(util.nombreObjetoSospechosos.length);
-    try {
-      //SET LADRON
-      objetosSuspects[idLadron].getClass().getMethod("setLadron").invoke(objetosSuspects[idLadron]);
-      //SET DISTANCIAS ENTRE LUGARES PARA CALCULO DE TIEMPO
-      Object total = objetosSuspects[idLadron].getClass().getMethod("getTotalPaises").invoke(objetosSuspects[idLadron]);
-      Log.d(TAG, "TOTAL PAISES VISITADOS " + total);
+    idLadron = new Random().nextInt(objetosSuspects.size());
 
-      for(int i = 0; i < (Integer) total; i++){
+    //SET LADRON
+    //objetosSuspects[idLadron].getClass().getMethod("setLadron").invoke(objetosSuspects[idLadron]);
+    objetosSuspects.get(idLadron).setThief();
+    //Object total = objetosSuspects[idLadron].getClass().getMethod("getTotalPaises").invoke(objetosSuspects[idLadron]);
 
-        paisesVisitadosLadron.add ((String) objetosSuspects[idLadron].getClass().getMethod("getPaisVisitado", Integer.class).invoke(objetosSuspects[idLadron], i));
-        Log.d("MAIN", "VISITO = " + paisesVisitadosLadron.get(i));
-        //PAIS DEL ROBO
-        int index = nombrePaises.get(paisesVisitadosLadron.get(i));
-        if(i == 0){
-          setPaisActual(paisesVisitadosLadron.get(i));
-          //CANTIDAD DE OBJETOS PARA ROBAR
-          //Object cantidadObjetos = objetosPaises[index].getClass().getMethod("getCantidadObjetos").invoke(objetosPaises[index]);
-          int cantidadObjetos = objetosPaises.get(index).getTotalStolenObjects();
-          Log.d("initSuspects", "cantidadObjetos = " + cantidadObjetos);
-          int random = new Random().nextInt((Integer) cantidadObjetos - 1);
-          //OBJETO ROBADO
-          //ASIGNAR OBJECTO ALEATORIO DEL PRIMER PAIS QUE VISITO ESE LADRON
-          //objetoRobado = (String) objetosPaises[index].getClass().getMethod("getObjeto", Integer.class).invoke(objetosPaises[index], random);
-          objetoRobado = objetosPaises.get(index).getStolenObjs(random);
-          Log.d(TAG, "Objeto robado = " + objetoRobado);
-        }
+    //INICIALIZAR LOS PAISES VISITADOS SEGUN EL NIVEL DEL DETECTIVE
+    objetosSuspects.get(idLadron).setVisitedCountries(Integer.parseInt(detective.getNivel()), new ArrayList<>(nombrePaises.keySet()));
+    int total = objetosSuspects.get(idLadron).getTotalVisitedCountries();
+
+    Log.d(TAG, "TOTAL PAISES VISITADOS " + total);
+
+    for(int i = 0; i < total; i++){
+
+      //paisesVisitadosLadron.add ((String) objetosSuspects[idLadron].getClass().getMethod("getPaisVisitado", Integer.class).invoke(objetosSuspects[idLadron], i));
+      paisesVisitadosLadron.add(objetosSuspects.get(idLadron).getVisitedCountry(i));
+      Log.d("MAIN", "VISITO = " + paisesVisitadosLadron.get(i));
+      //PAIS DEL ROBO
+      int index = nombrePaises.get(paisesVisitadosLadron.get(i));
+      if(i == 0){
+        setPaisActual(paisesVisitadosLadron.get(i));
+        //CANTIDAD DE OBJETOS PARA ROBAR
+        //Object cantidadObjetos = objetosPaises[index].getClass().getMethod("getCantidadObjetos").invoke(objetosPaises[index]);
+        int cantidadObjetos = objetosPaises.get(index).getTotalStolenObjects();
+        Log.d("initSuspects", "cantidadObjetos = " + cantidadObjetos);
+        int random = new Random().nextInt((Integer) cantidadObjetos - 1);
+        //OBJETO ROBADO
+        //ASIGNAR OBJECTO ALEATORIO DEL PRIMER PAIS QUE VISITO ESE LADRON
+        //objetoRobado = (String) objetosPaises[index].getClass().getMethod("getObjeto", Integer.class).invoke(objetosPaises[index], random);
+        objetoRobado = objetosPaises.get(index).getStolenObjs(random);
+        Log.d("initSuspects", "Objeto robado = " + objetoRobado);
+      //SI ES EL ULTIMO PAIS, ASIGNE UN LUGAR DONDE SE ENCUENTRA EL LADRON
+      }else if(i == (total - 1)){
+        int totalPlacesInCountry = objetosPaises.get(index).getTotalPlaces();
+        int randomPlace = new Random().nextInt(totalPlacesInCountry-1) + 1;
+        Log.d("initSuspects", "totalPlacesInCountry =  " + totalPlacesInCountry);
+        String key = "place"+randomPlace;
+        String lastPlace = objetosPaises.get(index).getPlace(key);
+        objetosSuspects.get(idLadron).setLastPlace(lastPlace);
+        Log.d("initSuspects", "Ladron se encuentra en " + lastPlace);
       }
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      e.printStackTrace();
     }
-
     siguientesPaises(paisActual);
   }
 
@@ -259,7 +358,7 @@ public class MainActivity extends AppCompatActivity{
     paisActual = pais;
     detective.addPaisVisitado(paisActual);
     //EL PAIS ACTUAL ESTA EN LA RUTA DEL LADRON ??
-    Boolean enLaRuta = false;
+    boolean enLaRuta = false;
     for(int i = 0; i < paisesVisitadosLadron.size(); i++){
       if(paisesVisitadosLadron.get(i).contains(paisActual)){
         enLaRuta = true;
@@ -273,18 +372,6 @@ public class MainActivity extends AppCompatActivity{
     lugaresInvestigar = new ArrayList<String>(Arrays.asList(lugares));
     Log.d("MAIN lugaresInvetigar", "lugaresInvetigar = " + Arrays.toString(lugares));
 
-    /*
-    try{
-      //String[] lugares = (String[]) objetosPaises[index].getClass().getMethod("getLugares").invoke(objetosPaises[index]);
-      assert lugares != null;
-      lugaresInvestigar = new ArrayList<String>(Arrays.asList(lugares));
-      Log.d("MAIN lugaresInvetigar", "lugaresInvetigar = " + Arrays.toString(lugares));
-    }catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      e.printStackTrace();
-    }
-
-     */
-
   }
 
   //SET TV PAIS ACTUAL
@@ -292,15 +379,6 @@ public class MainActivity extends AppCompatActivity{
     int index = nombrePaises.get(paisActual);
     String capital = objetosPaises.get(index).getCapital();
     tvPaisActual.setText(capital);
-    /*
-    try{
-      String capital = (String) objetosPaises[index].getClass().getMethod("getCapital").invoke(objetosPaises[index]);
-      tvPaisActual.setText(capital);
-    }catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      e.printStackTrace();
-    }
-
-     */
   }
 
   //SET TV HORA ACTUAL
@@ -309,30 +387,26 @@ public class MainActivity extends AppCompatActivity{
     tvHoraActual.setText(hora);
   }
 
-  //SET LINEAR LAYOUTS INFO
-  public void setInfoInvestVisible(){
-    TVInfoInvestigacion.setVisibility(View.VISIBLE);
-    tvIntroSuspectTitulo.setVisibility(View.INVISIBLE);
-    SVInfoSuspects.setVisibility(View.INVISIBLE);
+  //SET TV IMAGE / TRIVIA COUNTRY
+  public void setTrviasCountry(){
+    int index = nombrePaises.get(paisActual);
+    Integer totalTrivias = objetosPaises.get(index).getTotalTrivias();
+    int randomTrivia;
+    if(totalTrivias != null){
+      if(totalTrivias > 1){
+        randomTrivia = new Random().nextInt(totalTrivias - 1) + 1;
+      }else{
+        randomTrivia = 0;
+      }
+      String trivia = "triv"+randomTrivia;
+      Log.d("setTrviasCountry", "Trivia = " + trivia);
+      tvTextTrivias.setText(objetosPaises.get(index).getTrivia(trivia));
+    }
   }
-  public void setInfoSuspectstVisible(){
-    TVInfoInvestigacion.setVisibility(View.INVISIBLE);
-    tvIntroSuspectTitulo.setVisibility(View.VISIBLE);
-    SVInfoSuspects.setVisibility(View.VISIBLE);
-  }
-  //OPCIONES DE SELECCION DE CARACTERISTICAS DE LOS SOSPECHOSOS
-  public void setAutoCompleteTextViewsOptions(){
-    ArrayAdapter<String> adapter;
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.sexs);
-    actvSex.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.hobbys);
-    actvHobby.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.haircolors);
-    actvHair.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.features);
-    actvFeature.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.autos);
-    actvAuto.setAdapter(adapter);
+
+  //SET TV IMAGE OF COUNTRY
+  public void setImageCountry(){
+    Log.d("setImageCountry", "setImageOfCountry");
   }
 
   //FUNCION QUE GENERARA LOS DESTINOS POSIBLES
@@ -398,23 +472,17 @@ public class MainActivity extends AppCompatActivity{
     if(nivel.contains("1")){maximo = 2;}
     else if(nivel.contains("2")){maximo = 3;}
     while(!terminarDeAnadir){
-      if(destinos.size() > maximo){
+      if(destinos.size() > 3){
         terminarDeAnadir = true;
       }else{
         //Log.d("siguientesPaises", "destinos[" +indexPaisAñadido+"] = " + destinos.get(indexPaisAñadido) );
+        Log.d("siguientesPaises", "indexPaisAñadido = "+indexPaisAñadido);
+        Log.d("siguientesPaises", "destinos = "+destinos.get(indexPaisAñadido));
         index = nombrePaises.get(destinos.get(indexPaisAñadido));
         //TRAER LOS PAISES RELACIONADOS CON EL PAIS ACTUAL INGRESADO
         cantidadPaisesRelacionados = objetosPaises.get(index).getTotalRelatedCountries();
         paisesRelacionados = (String[]) objetosPaises.get(index).getAllRelatedCountries();
 
-        /*
-        try{
-          cantidadPaisesRelacionados = (Integer) objetosPaises[index].getClass().getMethod("getCantidadPaisesRelacionados").invoke(objetosPaises[index]);
-          paisesRelacionados = (String[]) objetosPaises[index].getClass().getMethod("getTodosLosPaisesRelacionados").invoke(objetosPaises[index]);
-        }catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e){
-          e.printStackTrace();
-        }
-         */
           //AÑADIR PAISES RELACIONADO CON EL DESTINO DEPENDIENDO DEL NIVEL
         if (cantidadPaisesRelacionados != null && paisesRelacionados != null && ingresados < maximo
         && intentosPaisRelacionado < 10) {
@@ -462,14 +530,6 @@ public class MainActivity extends AppCompatActivity{
       //Log.d("MAIN ObtenerNombreDestinos", "destinos["+i+"] = " + destinos.get(i));
       index = nombrePaises.get(destinos.get(i));
       nomDestinos.add(objetosPaises.get(index).getName());
-      /*
-      try{
-        nomDestinos.add((String) objetosPaises[index].getClass().getMethod("getNombre").invoke(objetosPaises[index]));
-      }catch(Exception e){
-        e.printStackTrace();
-      }
-
-       */
     }
     Log.d(TAG, "NOMBRE DESTINOS = "+ nomDestinos);
   }
@@ -479,6 +539,7 @@ public class MainActivity extends AppCompatActivity{
 
     //1. CAMBIAR EL PAIS ACTUAL
     setPaisActual(destino);
+    setTrviasCountry();
 
     //2. CALCULAR LA DISTANCIA
     int indexActual = nombrePaises.get(Actual);
@@ -494,37 +555,40 @@ public class MainActivity extends AppCompatActivity{
     longitud1 = Double.parseDouble(objetosPaises.get(indexActual).getLongitud());
     latitud2 = Double.parseDouble(objetosPaises.get(indexDestino).getLatitud());
     longitud2 = Double.parseDouble(objetosPaises.get(indexDestino).getLongitud());
-    /*
-    try{
-      latitud1 = Double.parseDouble((String) objetosPaises[indexActual].getClass().getMethod("getLatitud").invoke(objetosPaises[indexActual]));
-      longitud1 = Double.parseDouble((String) objetosPaises[indexActual].getClass().getMethod("getLongitud").invoke(objetosPaises[indexActual]));
 
-      latitud2 = Double.parseDouble((String) objetosPaises[indexDestino].getClass().getMethod("getLatitud").invoke(objetosPaises[indexDestino]));
-      longitud2 = Double.parseDouble((String) objetosPaises[indexDestino].getClass().getMethod("getLongitud").invoke(objetosPaises[indexDestino]));
-    }catch(Exception e){
-      e.printStackTrace();
-    }
-
-     */
-
-    distanciasPaises = util.haversine(latitud1, longitud1, latitud2, longitud2);
+    distanciasPaises = Util.haversine(latitud1, longitud1, latitud2, longitud2);
     Log.d(TAG, "Distancia "+ distanciasPaises);
 
-    tiempoViaje = (int) util.tiempoViaje(distanciasPaises);
+    tiempoViaje = (int) Util.tiempoViaje(distanciasPaises);
     Log.d(TAG, "Tiempo de viaje "+ tiempoViaje);
 
-    int nuevaHora = util.nuevaHora(detective.getHour(),  tiempoViaje);
-    int diferenciaReal = util.diferenciaReal(nuevaHora, tiempoViaje);
+    int nuevaHora = Util.nuevaHora(detective.getHour(),  tiempoViaje);
+    int diferenciaReal = Util.diferenciaReal(nuevaHora, tiempoViaje);
 
+    desactivarOpciones();
     animarReloj(diferenciaReal, tiempoViaje);
 
     String mensajeViaje = "Distancia a viajar = " + (int) distanciasPaises + "\n" +
       "Tiempo de viaje = " + tiempoViaje + "\n" +
       "Tiempo descanso = " + (diferenciaReal - tiempoViaje);
-    util.makeToast(this, mensajeViaje, 0 );
+    Util.makeToast(this, mensajeViaje, 0 );
 
     siguientesPaises(paisActual);
 
+  }
+
+  //FUNCION QUE DESACTIVA LAS OPCIONES DE LOS BOTONES MIENTRAS EL USUARIO VIAJA
+  public void desactivarOpciones(){
+    btConexiones.setClickable(false);
+    btViajar.setClickable(false);
+    btInvestigar.setClickable(false);
+    btInterpol.setClickable(false);
+  }
+  public void activarOpciones(){
+    btConexiones.setClickable(true);
+    btViajar.setClickable(true);
+    btInvestigar.setClickable(true);
+    btInterpol.setClickable(true);
   }
 
   //FUNCION QUE CAMBIA EL RELOJ SEGUN EL CALCULO DEL NUEVO TIEMPO
@@ -537,7 +601,7 @@ public class MainActivity extends AppCompatActivity{
             runOnUiThread(new Runnable() {
               @Override
               public void run() {
-                String text = util.newDayHour(detective.getHour(), detective.getDia());
+                String text = Util.newDayHour(detective.getHour(), detective.getDia());
                 //String text = diasSemana[indexDiaSiguiente] + "/" + horaPresentar + "/" +franjaHoraria + "/" + hora;
                 detective.setDia(text.split("/")[0]);
                 detective.setHourToShow(text.split("/")[1]);
@@ -558,9 +622,9 @@ public class MainActivity extends AppCompatActivity{
           }
         }
         setTVPaisActual();
+        activarOpciones();
       }
     }.start();
-
   }
 
   //FUNCION QUE CAMBIARA LAS HORAS QUE PASAN DEPENDIENDO DEL LUGAR A VISITAR
@@ -582,13 +646,116 @@ public class MainActivity extends AppCompatActivity{
     if(random > rango1 && random <= rango2){ tiempoDeViaje = 2; }
     if(random > rango2){ tiempoDeViaje = 3; }
 
-    int nuevaHora = util.nuevaHora(detective.getHour(),  tiempoDeViaje);
-    int diferenciaReal = util.diferenciaReal(nuevaHora, tiempoDeViaje);
+    int nuevaHora = Util.nuevaHora(detective.getHour(),  tiempoDeViaje);
+    int diferenciaReal = Util.diferenciaReal(nuevaHora, tiempoDeViaje);
 
     animarReloj(diferenciaReal, tiempoDeViaje);
     setTVPaisActual();
+    piastasEnElLugar(lugar);
 
   }
+
+  //FUNCION QUE MUESTRA LAS PISTAS OBTENIDAS EN EL LUGAR A INVESTIGAR
+  public void piastasEnElLugar(String lugar){
+
+    String[] personas = new String[]{"Guardia de seguridad", "Peaton", "Vendedor", "Policia local",
+    "Ciclista"};
+    int randomPersonas =  new Random().nextInt(personas.length);
+    int randomVestimenta =  new Random().nextInt(objetosSuspects.get(idLadron).getTotalClothing() - 1);
+
+    int indexCountryActual = nombrePaises.get(paisActual);
+
+    int indexRuta = paisesVisitadosLadron.stream()
+      .filter(v -> v.contains(paisActual))
+      .map(v -> paisesVisitadosLadron.indexOf(v)).findFirst()
+      .orElse(-1);
+    int sizePaisesVisitados = paisesVisitadosLadron.size() - 1;
+
+    String siguientePais, pistaMoneda = "", pistaVestimenta = "", pistaBandera = "", mensaje = "";
+    List<String> pistas = new ArrayList<>();
+
+    int indexCountrySiguiente;
+
+    //SI EL LADRON ESTUVO EN EL PAIS Y EL PAIS ACTUAL NO ES EL UTLTIMO ENTONCES:...
+    if(indexRuta != -1 & indexRuta < sizePaisesVisitados){
+
+      siguientePais = paisesVisitadosLadron.get(indexRuta+1);
+      indexCountrySiguiente = nombrePaises.get(siguientePais);
+
+      //MONEY
+      if(!objetosPaises.get(indexCountrySiguiente).getMoneda().contains("Dolar")){
+        pistas.add("Vi a alguien sospechoso queriendo cambiar Dolares a " + objetosPaises.get(indexCountrySiguiente).getMoneda());
+      }
+      //CLOTHING
+      pistas.add("Vi a alguien sospechoso que vestia " +  objetosSuspects.get(idLadron).getClothing(randomVestimenta) +" de color " +
+        objetosSuspects.get(idLadron).getClothingColor(randomVestimenta));
+      //FLAG
+      pistas.add("Vi que llevaba una bandera con los colores " + objetosPaises.get(indexCountrySiguiente).getClue("flag"));
+      //COUNTRY PRODUCTION
+      int randomProduccion =  new Random().nextInt(objetosPaises.get(indexCountrySiguiente).getCluesProd());
+      pistas.add("Escuche a alguien hablar de un pais con un mercado grande de " +
+        objetosPaises.get(indexCountrySiguiente).getClue("prod"+randomProduccion));
+      //AUTO
+      if(!objetosSuspects.get(idLadron).getAuto().isEmpty()){
+        pistas.add("Me parecio escuchar a alguien preguntando donde podia alquilar un " + objetosSuspects.get(idLadron).getAuto());
+      }
+      //HAIR COLOR & SEX
+      if(!objetosSuspects.get(idLadron).getHaircolor().isEmpty()){
+        if(objetosSuspects.get(idLadron).getSex().contains("mujer")){
+          pistas.add("Vi a una mujer sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+        }else if(objetosSuspects.get(idLadron).getSex().contains("hombre")){
+          pistas.add("Vi a un hombre sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+        }else{
+          pistas.add("Vi a alguien sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+        }
+      }
+      //FAVORITE FOOD
+      if(!objetosSuspects.get(idLadron).getFavoriteFood().isEmpty()){
+        pistas.add("Escuche a alguien preguntando donde podia comer " + objetosSuspects.get(idLadron).getFavoriteFood());
+      }
+      //FEATURE
+      if(!objetosSuspects.get(idLadron).getFeature().isEmpty()){
+        pistas.add("Vi a alguien sospechoso con " + objetosSuspects.get(idLadron).getFeature());
+      }
+      //HOBBIE
+      if(!objetosSuspects.get(idLadron).getHobby().isEmpty()){
+        pistas.add("Escuche a alguien hablando que le gustaba " + objetosSuspects.get(idLadron).getHobby().isEmpty());
+      }
+      //NADIE HA VISTO ALGO
+      pistas.add("No he visto nada sospechoso por aqui.");
+
+    //SI EL LADRON ESTUVO EN ESTE PAIS Y ES EL ULTIMO
+    }else if(indexRuta != -1 & indexRuta == sizePaisesVisitados){
+      //SI EL DETECTIVE ESTA EN EL MISMO LUGAR DEL LADRON ENTONCES
+      if(objetosSuspects.get(idLadron).getLastPlace().contains(lugar)){
+        pistas.add("Ahi esta quien buscas!");
+        String mensajeFinal = "Ladron Encontrado";
+        Util.makeToast(this, mensajeFinal, 1);
+      }else{
+        pistas.add("Hace poco vi a alguien sospechoso por acá");
+        pistas.add("me parecio haber visto el " + objetoRobado);
+      }
+    //SI EL LADRON NO ESTUVO EN EL PAIS ACTUAL
+    }else if(indexRuta == -1){
+      pistas.add("No he visto nada sospechoso por aqui.");
+    }
+    int randomPista;
+    if(pistas.size() > 1){
+      randomPista = new Random().nextInt(pistas.size() - 1);
+    }else{
+      randomPista = 0;
+    }
+
+    mensaje = personas[randomPersonas] + ": \n" + pistas.get(randomPista);
+    mostrarPista(mensaje);
+
+  }
+
+  //FUNCION QUE CARGARA LA PISTA GENERADA EN EL TEXTVIEW
+  public void mostrarPista(String mensaje){
+    TVInfoInvestigacion.setText(mensaje);
+  }
+
 
   //FUNCION DE RESPUESTA A BOTON CONEXIONES
   public void conexiones(View view){
@@ -684,14 +851,23 @@ public class MainActivity extends AppCompatActivity{
   //FUNCION QUE CREARA EL TEXTO DE INTRO DEL JUEGO
   public void enviarTextoEntrada(){
     String texto = "\nHola " + detective.getName() + " \n" +
-      "Tu rango actual es:" + "\n" + detective.getRank() +"\n"+ "\n" +
+      "Tu rango actual es:" + "\n" + detective.getRank() + "\n" + "\n" + "\n" +
       "****FLASH****" + "\n" + "\n" +
-      "Ojbeto robado en. ....";
+      "Nuevo evento:" + "\n" +
+      "se ha reportado el robo del objeto:"+ "\n"  +
+      objetoRobado + "\n"  +
+      "en " + paisActual + "\n" + "\n" +
+      "se sospecha de la banda V.I.L.E." +
+      " Por favor dirijase al lugar e investigue," +
+      " tiene hasta el domingo antes de las 18:00 " + "\n" + "\n" +
+      "Buena suerte";
     typing(texto);
+    btIniciar.setVisibility(View.VISIBLE);
   }
 
   //FUNCION QUE SIMULA EL INGRESO DEL TEXTO COMO MAQUINA DE ESCRIBIR
   public void typing(String newText){
+
     new Thread() {
       public void run() {
         MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.typewriter);
@@ -702,12 +878,13 @@ public class MainActivity extends AppCompatActivity{
             StringBuilder stringBuilder = new StringBuilder();
             String text = tvIntroMision.getText().toString();
             String finalText =  stringBuilder.append(text).append(c).toString();
-            Log.d("TYPING", "Text = " + tvIntroMision.getText().toString());
+            //Log.d("TYPING", "Text = " + tvIntroMision.getText().toString());
             mp.start();
             runOnUiThread(new Runnable() {
               @Override
               public void run() {
                 tvIntroMision.setText(finalText);
+                svIntroMision.fullScroll(View.FOCUS_DOWN);
               }
             });
             Thread.sleep(100);
@@ -721,5 +898,45 @@ public class MainActivity extends AppCompatActivity{
       }
     }.start();
   }
+
+
+  //FUNCION QUE VERIFICARA LA HORA Y DIA
+  public void verificarFin(){
+    String dia = detective.getDia();
+    int hora = detective.getHour();
+    if(dia.contains("DOMINGO") & hora >= 18){
+      //TERMINA EL JUEGO
+      endGame();
+    }else{
+      aumentarNivelDetective();
+    }
+  }
+
+  //FUNCION TERMINAR EL JUEGO
+  public void endGame(){
+    Log.d("END GAME", "...");
+    reiniciarJuego();
+  }
+
+  //FUNCION QUE AUMENTA EL NIVEL DEL DETECTIVE CUANDO HA LOGRADO ENCONTRAR AL SOSPECHOSOS
+  public void aumentarNivelDetective(){
+
+    String name = detective.getName();
+    Integer lvl = Integer.parseInt(detective.getNivel());
+    String[] rangos = new String[]{"OFICIAL", "INVESTIGADOR", "INSPECTOR", "DETECTIVE"};
+    if(lvl <= 4){
+      lvl++;
+      editor.putString("nivel"+name, String.valueOf(lvl));
+      editor.putString("rank"+name, rangos[lvl-1]);
+    }
+    reiniciarJuego();
+  }
+
+  //FUNCION PARA REINICIAR EL JUEGO
+  public void reiniciarJuego(){
+
+  }
+
+
 
 }

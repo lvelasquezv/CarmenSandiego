@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="alturaViewsMin">48dp</dimen>
-    <dimen name="anchoViews">200dp</dimen>
     <dimen name="marginsLayouts">8dp</dimen>
 </resources>
