@@ -1,4 +1,4 @@
-package com.vv.carmensandiego.detective;
+package com.vv.carmensandiego;
 
 import java.util.ArrayList;
 import java.util.List;

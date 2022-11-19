@@ -21,13 +21,13 @@ import java.util.Random;
  */
 
 
-public class util{
+public class Util{
 
   //CARACTERISTICAS DE LOS SOSPECHOSOS
   public static final String[] sexs = {"male", "female", "non binary"};
   public static final String[] hobbys = {"tennis", "music", "mt climbing", "skydiving", "swimming", "croquet", "football"};
   public static final String[] haircolors = {"brown","blond","red","black"};
-  public static final String[] features = {"limps", "ring", "tattoo", "scar", "jewelry" };
+  public static final String[] features = {"limps", "ring", "tattoo", "scar", "jewelry","eye patch"};
   public static final String[] autos = {"convertible","limousine","race car", "motorcycle"};
   public static final String[] clothings = {"Jacket", "jeans", "suit", "cap", "scarf", "boots", "coat", "tennis", "hat"};
   public static final String[] clothingColors = {"white", "red", "black", "gray", "dark blue"};
@@ -69,7 +69,7 @@ public class util{
   }
 
   //FUNCION QUE SELECCIONA LA CANTIDAD DE PAISES SEGUN EL NIVEL SELECCIONADO
-  public static List<String> paisesVisitados(String nivel) {
+  public static List<String> paisesVisitados(String nivel, String[] paises) {
     int cantidadPaises = 0;
     List<Integer> randoms = new ArrayList<>();
     List<String> visitados = new ArrayList<>();

@@ -1,6 +1,5 @@
 package com.vv.carmensandiego;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,17 +20,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-
-import com.vv.carmensandiego.detective.Detective;
-
-import java.lang.reflect.InvocationTargetException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +55,7 @@ public class MainActivity extends AppCompatActivity{
   AutoCompleteTextView actvAuto;
 
   //VARIABLE DE INICIO SOSPECHOSOS
-  Object[] objetosSuspects = new Object[util.nombreObjetoSospechosos.length];
+  ArrayList<Suspects> objetosSuspects;
   int idLadron;
   List<String> paisesVisitadosLadron = new ArrayList<String>();;
   String objetoRobado;
@@ -179,78 +167,47 @@ public class MainActivity extends AppCompatActivity{
       nombrePaises.put(objetosPaises.get(i).getName(), i);
       Log.d("initCountries", objetosPaises.get(i).getName());
     }
-
-    /*
-    for(int i = 0; i < util.nombreObjetoPaises.length; i++){
-      String nombre = util.nombreObjetoPaises[i];
-      try {
-        Class<?> clazz = Class.forName("com.vv.carmensandiego.paises." + nombre);
-        //objetosPaises[i] = clazz.getDeclaredConstructor().newInstance();
-        //SE GUARDA AL NOMBRE DEL OBJETO Y EL INDICE PARA FACILIDAD DE UBICACION
-        nombrePaises.put(nombre, i);
-      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
-        NoSuchMethodException | InvocationTargetException e) {
-        e.printStackTrace();
-      }
-    }
-
-     */
   }
 
   //INICIALIZAR OBJECTOS SOSPECHOSOS
   public void initSuspects(){
-    //LOOP POR LOS SOSPECHOSOS
-    for(int i = 0; i < util.nombreObjetoSospechosos.length; i++){
-      String nombre = util.nombreObjetoSospechosos[i];
-      try {
-        Class<?> clazz = Class.forName("com.vv.carmensandiego.suspects." + nombre);
-        objetosSuspects[i] = clazz.getDeclaredConstructor().newInstance();
-      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
-                NoSuchMethodException | InvocationTargetException e) {
-        e.printStackTrace();
-      }
-    }
-    /* SELECCIONA UN LADRON
-      https://stackoverflow.com/questions/942326/calling-static-method-on-a-class
-      Method method = className.getDeclaredMethod("getInfo", String.class);
-      method.invoke(instance, "your parameter");
-      Where instance is either: Object instance = null; if the method is static. Or:
-      Object instance = className.getDeclaredConstructor().newInstance();
-      If the method is a member method
-     */
+    objetosSuspects = UtilityClassSuspects.getInstance().getList();
+
     //NUMERO ALEATORIO PARA SELECCIONAR UN LADRON
-    idLadron = new Random().nextInt(util.nombreObjetoSospechosos.length);
-    try {
-      //SET LADRON
-      objetosSuspects[idLadron].getClass().getMethod("setLadron").invoke(objetosSuspects[idLadron]);
-      //SET DISTANCIAS ENTRE LUGARES PARA CALCULO DE TIEMPO
-      Object total = objetosSuspects[idLadron].getClass().getMethod("getTotalPaises").invoke(objetosSuspects[idLadron]);
-      Log.d(TAG, "TOTAL PAISES VISITADOS " + total);
+    idLadron = new Random().nextInt(objetosSuspects.size());
 
-      for(int i = 0; i < (Integer) total; i++){
+    //SET LADRON
+    //objetosSuspects[idLadron].getClass().getMethod("setLadron").invoke(objetosSuspects[idLadron]);
+    objetosSuspects.get(idLadron).setThief();
+    //Object total = objetosSuspects[idLadron].getClass().getMethod("getTotalPaises").invoke(objetosSuspects[idLadron]);
 
-        paisesVisitadosLadron.add ((String) objetosSuspects[idLadron].getClass().getMethod("getPaisVisitado", Integer.class).invoke(objetosSuspects[idLadron], i));
-        Log.d("MAIN", "VISITO = " + paisesVisitadosLadron.get(i));
-        //PAIS DEL ROBO
-        int index = nombrePaises.get(paisesVisitadosLadron.get(i));
-        if(i == 0){
-          setPaisActual(paisesVisitadosLadron.get(i));
-          //CANTIDAD DE OBJETOS PARA ROBAR
-          //Object cantidadObjetos = objetosPaises[index].getClass().getMethod("getCantidadObjetos").invoke(objetosPaises[index]);
-          int cantidadObjetos = objetosPaises.get(index).getTotalStolenObjects();
-          Log.d("initSuspects", "cantidadObjetos = " + cantidadObjetos);
-          int random = new Random().nextInt((Integer) cantidadObjetos - 1);
-          //OBJETO ROBADO
-          //ASIGNAR OBJECTO ALEATORIO DEL PRIMER PAIS QUE VISITO ESE LADRON
-          //objetoRobado = (String) objetosPaises[index].getClass().getMethod("getObjeto", Integer.class).invoke(objetosPaises[index], random);
-          objetoRobado = objetosPaises.get(index).getStolenObjs(random);
-          Log.d(TAG, "Objeto robado = " + objetoRobado);
-        }
+    //INICIALIZAR LOS PAISES VISITADOS SEGUN EL NIVEL DEL DETECTIVE
+    objetosSuspects.get(idLadron).setVisitedCountries(Integer.parseInt(detective.getNivel()), new ArrayList<>(nombrePaises.keySet()));
+    int total = objetosSuspects.get(idLadron).getTotalVisitedCountries();
+
+    Log.d(TAG, "TOTAL PAISES VISITADOS " + total);
+
+    for(int i = 0; i < total; i++){
+
+      //paisesVisitadosLadron.add ((String) objetosSuspects[idLadron].getClass().getMethod("getPaisVisitado", Integer.class).invoke(objetosSuspects[idLadron], i));
+      paisesVisitadosLadron.add(objetosSuspects.get(idLadron).getVisitedCountry(i));
+      Log.d("MAIN", "VISITO = " + paisesVisitadosLadron.get(i));
+      //PAIS DEL ROBO
+      int index = nombrePaises.get(paisesVisitadosLadron.get(i));
+      if(i == 0){
+        setPaisActual(paisesVisitadosLadron.get(i));
+        //CANTIDAD DE OBJETOS PARA ROBAR
+        //Object cantidadObjetos = objetosPaises[index].getClass().getMethod("getCantidadObjetos").invoke(objetosPaises[index]);
+        int cantidadObjetos = objetosPaises.get(index).getTotalStolenObjects();
+        Log.d("initSuspects", "cantidadObjetos = " + cantidadObjetos);
+        int random = new Random().nextInt((Integer) cantidadObjetos - 1);
+        //OBJETO ROBADO
+        //ASIGNAR OBJECTO ALEATORIO DEL PRIMER PAIS QUE VISITO ESE LADRON
+        //objetoRobado = (String) objetosPaises[index].getClass().getMethod("getObjeto", Integer.class).invoke(objetosPaises[index], random);
+        objetoRobado = objetosPaises.get(index).getStolenObjs(random);
+        Log.d(TAG, "Objeto robado = " + objetoRobado);
       }
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      e.printStackTrace();
     }
-
     siguientesPaises(paisActual);
   }
 
@@ -259,7 +216,7 @@ public class MainActivity extends AppCompatActivity{
     paisActual = pais;
     detective.addPaisVisitado(paisActual);
     //EL PAIS ACTUAL ESTA EN LA RUTA DEL LADRON ??
-    Boolean enLaRuta = false;
+    boolean enLaRuta = false;
     for(int i = 0; i < paisesVisitadosLadron.size(); i++){
       if(paisesVisitadosLadron.get(i).contains(paisActual)){
         enLaRuta = true;
@@ -273,18 +230,6 @@ public class MainActivity extends AppCompatActivity{
     lugaresInvestigar = new ArrayList<String>(Arrays.asList(lugares));
     Log.d("MAIN lugaresInvetigar", "lugaresInvetigar = " + Arrays.toString(lugares));
 
-    /*
-    try{
-      //String[] lugares = (String[]) objetosPaises[index].getClass().getMethod("getLugares").invoke(objetosPaises[index]);
-      assert lugares != null;
-      lugaresInvestigar = new ArrayList<String>(Arrays.asList(lugares));
-      Log.d("MAIN lugaresInvetigar", "lugaresInvetigar = " + Arrays.toString(lugares));
-    }catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      e.printStackTrace();
-    }
-
-     */
-
   }
 
   //SET TV PAIS ACTUAL
@@ -292,15 +237,6 @@ public class MainActivity extends AppCompatActivity{
     int index = nombrePaises.get(paisActual);
     String capital = objetosPaises.get(index).getCapital();
     tvPaisActual.setText(capital);
-    /*
-    try{
-      String capital = (String) objetosPaises[index].getClass().getMethod("getCapital").invoke(objetosPaises[index]);
-      tvPaisActual.setText(capital);
-    }catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      e.printStackTrace();
-    }
-
-     */
   }
 
   //SET TV HORA ACTUAL
@@ -323,15 +259,15 @@ public class MainActivity extends AppCompatActivity{
   //OPCIONES DE SELECCION DE CARACTERISTICAS DE LOS SOSPECHOSOS
   public void setAutoCompleteTextViewsOptions(){
     ArrayAdapter<String> adapter;
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.sexs);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.sexs);
     actvSex.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.hobbys);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.hobbys);
     actvHobby.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.haircolors);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.haircolors);
     actvHair.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.features);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.features);
     actvFeature.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, util.autos);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.autos);
     actvAuto.setAdapter(adapter);
   }
 
@@ -407,14 +343,6 @@ public class MainActivity extends AppCompatActivity{
         cantidadPaisesRelacionados = objetosPaises.get(index).getTotalRelatedCountries();
         paisesRelacionados = (String[]) objetosPaises.get(index).getAllRelatedCountries();
 
-        /*
-        try{
-          cantidadPaisesRelacionados = (Integer) objetosPaises[index].getClass().getMethod("getCantidadPaisesRelacionados").invoke(objetosPaises[index]);
-          paisesRelacionados = (String[]) objetosPaises[index].getClass().getMethod("getTodosLosPaisesRelacionados").invoke(objetosPaises[index]);
-        }catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e){
-          e.printStackTrace();
-        }
-         */
           //AÑADIR PAISES RELACIONADO CON EL DESTINO DEPENDIENDO DEL NIVEL
         if (cantidadPaisesRelacionados != null && paisesRelacionados != null && ingresados < maximo
         && intentosPaisRelacionado < 10) {
@@ -462,14 +390,6 @@ public class MainActivity extends AppCompatActivity{
       //Log.d("MAIN ObtenerNombreDestinos", "destinos["+i+"] = " + destinos.get(i));
       index = nombrePaises.get(destinos.get(i));
       nomDestinos.add(objetosPaises.get(index).getName());
-      /*
-      try{
-        nomDestinos.add((String) objetosPaises[index].getClass().getMethod("getNombre").invoke(objetosPaises[index]));
-      }catch(Exception e){
-        e.printStackTrace();
-      }
-
-       */
     }
     Log.d(TAG, "NOMBRE DESTINOS = "+ nomDestinos);
   }
@@ -494,34 +414,22 @@ public class MainActivity extends AppCompatActivity{
     longitud1 = Double.parseDouble(objetosPaises.get(indexActual).getLongitud());
     latitud2 = Double.parseDouble(objetosPaises.get(indexDestino).getLatitud());
     longitud2 = Double.parseDouble(objetosPaises.get(indexDestino).getLongitud());
-    /*
-    try{
-      latitud1 = Double.parseDouble((String) objetosPaises[indexActual].getClass().getMethod("getLatitud").invoke(objetosPaises[indexActual]));
-      longitud1 = Double.parseDouble((String) objetosPaises[indexActual].getClass().getMethod("getLongitud").invoke(objetosPaises[indexActual]));
 
-      latitud2 = Double.parseDouble((String) objetosPaises[indexDestino].getClass().getMethod("getLatitud").invoke(objetosPaises[indexDestino]));
-      longitud2 = Double.parseDouble((String) objetosPaises[indexDestino].getClass().getMethod("getLongitud").invoke(objetosPaises[indexDestino]));
-    }catch(Exception e){
-      e.printStackTrace();
-    }
-
-     */
-
-    distanciasPaises = util.haversine(latitud1, longitud1, latitud2, longitud2);
+    distanciasPaises = Util.haversine(latitud1, longitud1, latitud2, longitud2);
     Log.d(TAG, "Distancia "+ distanciasPaises);
 
-    tiempoViaje = (int) util.tiempoViaje(distanciasPaises);
+    tiempoViaje = (int) Util.tiempoViaje(distanciasPaises);
     Log.d(TAG, "Tiempo de viaje "+ tiempoViaje);
 
-    int nuevaHora = util.nuevaHora(detective.getHour(),  tiempoViaje);
-    int diferenciaReal = util.diferenciaReal(nuevaHora, tiempoViaje);
+    int nuevaHora = Util.nuevaHora(detective.getHour(),  tiempoViaje);
+    int diferenciaReal = Util.diferenciaReal(nuevaHora, tiempoViaje);
 
     animarReloj(diferenciaReal, tiempoViaje);
 
     String mensajeViaje = "Distancia a viajar = " + (int) distanciasPaises + "\n" +
       "Tiempo de viaje = " + tiempoViaje + "\n" +
       "Tiempo descanso = " + (diferenciaReal - tiempoViaje);
-    util.makeToast(this, mensajeViaje, 0 );
+    Util.makeToast(this, mensajeViaje, 0 );
 
     siguientesPaises(paisActual);
 
@@ -537,7 +445,7 @@ public class MainActivity extends AppCompatActivity{
             runOnUiThread(new Runnable() {
               @Override
               public void run() {
-                String text = util.newDayHour(detective.getHour(), detective.getDia());
+                String text = Util.newDayHour(detective.getHour(), detective.getDia());
                 //String text = diasSemana[indexDiaSiguiente] + "/" + horaPresentar + "/" +franjaHoraria + "/" + hora;
                 detective.setDia(text.split("/")[0]);
                 detective.setHourToShow(text.split("/")[1]);
@@ -582,8 +490,8 @@ public class MainActivity extends AppCompatActivity{
     if(random > rango1 && random <= rango2){ tiempoDeViaje = 2; }
     if(random > rango2){ tiempoDeViaje = 3; }
 
-    int nuevaHora = util.nuevaHora(detective.getHour(),  tiempoDeViaje);
-    int diferenciaReal = util.diferenciaReal(nuevaHora, tiempoDeViaje);
+    int nuevaHora = Util.nuevaHora(detective.getHour(),  tiempoDeViaje);
+    int diferenciaReal = Util.diferenciaReal(nuevaHora, tiempoDeViaje);
 
     animarReloj(diferenciaReal, tiempoDeViaje);
     setTVPaisActual();

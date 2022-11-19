@@ -1,6 +1,5 @@
 package com.vv.carmensandiego;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.motion.widget.MotionLayout;
 
@@ -8,17 +7,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,8 +20,8 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
 
   Intent mainIntent;
 
-  Country country;
   ArrayList<Country> countries = new ArrayList<>();
+  ArrayList<Suspects> vileBand = new ArrayList<>();
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +36,7 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
 
     //CARGAR DATOS DE FIREBASE
     dataFromFirebaseCountries();
+    dataFromFirebaseSuspects();
 
     MotionLayout introMotionLayout = findViewById(R.id.IntroMotionLayout);
     introMotionLayout.setTransitionListener(new MotionLayout.TransitionListener() {
@@ -72,99 +65,139 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
   //FUNCION QUE TRAERA LA INFORMACION SOBRE CADA PAIS, GUARDADA EN FIREBASE
   public void dataFromFirebaseCountries(){
 
+    Log.d("INTRO1 dataFromFirebaseCountries", "INIT");
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     final int[] countryNumber = {0};
     //1. OBTENER NOMBRE Y DATOS BASICOS DE PAISES
-    db.collection("paises").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-      @Override
-      public void onComplete(@NonNull Task<QuerySnapshot> task) {
-        if (task.isSuccessful()) {
-          for (QueryDocumentSnapshot document : task.getResult()) {
-            //Log.d("dataFromFirebaseCountries", document.getId());
-            countries.add(new Country());
-            onSuccesFirebaseInitialData(document.getId(), countryNumber[0], document.getData());
-            countryNumber[0]++;
-          }
-          onCompleteFirebaseData();
-        } else {
-          Log.d(TAG, "Error getting documents: ", task.getException());
-          onFailFirebaseData();
+    db.collection("paises").get().addOnCompleteListener(task -> {
+      if (task.isSuccessful()) {
+        for (QueryDocumentSnapshot document : task.getResult()) {
+          //Log.d("dataFromFirebaseCountries", document.getId());
+          countries.add(new Country());
+          onSuccesFirebaseInitialData(document.getId(), countryNumber[0], document.getData());
+          countryNumber[0]++;
         }
+      } else {
+        Log.d(TAG, "Error getting documents: ", task.getException());
+        onFailFirebaseData("Countries");
       }
     });
   }
-
 
 
   @Override
   public void onSuccesFirebaseInitialData(String name, Integer countryNumber, Map<String, Object> data) {
 
     countries.get(countryNumber).setFirebaseName(name);
-    countries.get(countryNumber).setTAG((String) data.get("TAG"));
-    countries.get(countryNumber).setAeropuerto((String) data.get("airport"));
-    countries.get(countryNumber).setCapital((String) data.get("capital"));
-    countries.get(countryNumber).setLatitud((String) data.get("latitud"));
-    countries.get(countryNumber).setLongitud((String) data.get("longitud"));
-    countries.get(countryNumber).setMoneda((String) data.get("moneda"));
-    countries.get(countryNumber).setName((String) data.get("name"));
-    countries.get(countryNumber).setPopulation((String) data.get("population"));
-    countries.get(countryNumber).setRegion((String) data.get("region"));
+    for (String key : data.keySet()) {
+      if (key.contains("flag") || key.contains("prod")) {
+        countries.get(countryNumber).setClue(key, (String) data.get(key));
+      } else if (key.contains("related")) {
+        countries.get(countryNumber).setRelatedCountries(key, (String) data.get(key));
+      } else if (key.contains("place")) {
+        countries.get(countryNumber).setPlaces(key, (String) data.get(key));
+      } else if (key.contains("stolen")) {
+        countries.get(countryNumber).setStolenObjs(key, (String) data.get(key));
+      } else if (key.contains("triv")) {
+        countries.get(countryNumber).setTrivias(key, (String) data.get(key));
+      } else if (key.contains("TAG")) {
+        countries.get(countryNumber).setTAG((String) data.get(key));
+      } else if (key.contains("airport")) {
+        countries.get(countryNumber).setAeropuerto((String) data.get(key));
+      } else if (key.contains("capital")) {
+        countries.get(countryNumber).setCapital((String) data.get(key));
+      } else if (key.contains("latitud")) {
+        countries.get(countryNumber).setLatitud((String) data.get(key));
+      } else if (key.contains("longitud")) {
+        countries.get(countryNumber).setLongitud((String) data.get(key));
+      } else if (key.contains("moneda")) {
+        countries.get(countryNumber).setMoneda((String) data.get(key));
+      } else if (key.contains("name")) {
+        countries.get(countryNumber).setName((String) data.get(key));
+      } else if (key.contains("population")) {
+        countries.get(countryNumber).setPopulation((String) data.get(key));
+      } else if (key.contains("region")) {
+        countries.get(countryNumber).setRegion((String) data.get(key));
+      }
+    }
+    Log.d("onSuccesFirebaseInitialData", "Country: " + countryNumber + "\n" + countries.get(countryNumber).countryToJSON());
+  }
 
 
-    //2. OBTENER COLECCIONES DE PISTAS
+  //FUNCION QUE CARGA LOS DATOS DE LOS SOSPECHOSOS EN FIREBASE
+  public void dataFromFirebaseSuspects(){
+    Log.d("INTRO1 dataFromFirebaseSuspects", "INIT");
     FirebaseFirestore db = FirebaseFirestore.getInstance();
-    Query queryClues = db
-      .collection("paises")
-      .document(name)
-      .collection("INFO");
-
-    Task<QuerySnapshot> taskClues = queryClues.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-      @Override
-      public void onComplete(@NonNull Task<QuerySnapshot> task) {
-        if (task.isSuccessful()) {
-          for (QueryDocumentSnapshot subdocument : task.getResult()) {
-            onSuccesFirebaseInfoData(name, countryNumber, subdocument.getId(), subdocument.getData());
-          }
-          countries.add(country);
-          Log.d("onSuccesFirebaseInitialData", "Country: " + countryNumber + "\n" + countries.get(countryNumber).countryToJSON());
-        } else {
-          Log.d(TAG, "Error getting " + "" + " : ", task.getException());
+    final int[] suspectNumber = {0};
+    //1. OBTENER NOMBRE Y DATOS BASICOS DE PAISES
+    db.collection("suspects").get().addOnCompleteListener(task -> {
+      if (task.isSuccessful()) {
+        for (QueryDocumentSnapshot document : task.getResult()) {
+          //Log.d("dataFromFirebaseCountries", document.getId());
+          vileBand.add(new Suspects());
+          onSuccesFirebaseSuspects(document.getId(), suspectNumber[0], document.getData());
+          suspectNumber[0]++;
         }
+        onCompleteFirebaseData();
+      } else {
+        Log.d(TAG, "Error getting documents: ", task.getException());
+        onFailFirebaseData("vileband");
       }
     });
   }
 
   @Override
-  public void onSuccesFirebaseInfoData(String name, Integer countryNumber, String infoData, Map<String, Object> data) {
+  public void onSuccesFirebaseSuspects(String name, Integer suspectNumber, Map<String, Object> data) {
+    vileBand.get(suspectNumber).setName(name);
+    boolean randomClothing = true;
     for(String key : data.keySet()){
-      //Log.d("onSuccesFirebaseInfoData", "key: " + key + " | value: " + data.get(key));
-      if(infoData.contains("CLUES")){
-        countries.get(countryNumber).setClue(key, (String) data.get(key));
-      }
-      else if(infoData.contains("COUNTRIES")){
-        countries.get(countryNumber).setRelatedCountries(key, (String) data.get(key));
-      }
-      else if(infoData.contains("PLACES")){
-        countries.get(countryNumber).setPlaces(key, (String) data.get(key));
-      }
-      else if(infoData.contains("STOLEN")){
-        countries.get(countryNumber).setStolenObjs(key, (String) data.get(key));
-      }
-      else if(infoData.contains("TRIVIAS")){
-        countries.get(countryNumber).setTrivias(key, (String) data.get(key));
+      Log.d("INTRO1 onSuccesFirebaseSuspects", "Suspect " + name + " " + key + " " + data.get(key));
+      if(key.contains("sex")){
+        vileBand.get(suspectNumber).setSex((String) data.get(key));
+      }else if(key.contains("age")){
+        vileBand.get(suspectNumber).setAge((String) data.get(key));
+      }else if(key.contains("height")) {
+        vileBand.get(suspectNumber).setHeight((String) data.get(key));
+      }else if(key.contains("weight")) {
+        vileBand.get(suspectNumber).setWeight((String) data.get(key));
+      }else if(key.contains("haircolor")) {
+        vileBand.get(suspectNumber).setHaircolor((String) data.get(key));
+      }else if(key.contains("hobby")) {
+        vileBand.get(suspectNumber).setHobby((String) data.get(key));
+      }else if(key.contains("favoritefood")) {
+        vileBand.get(suspectNumber).setFavoriteFood((String) data.get(key));
+      }else if(key.contains("feature")) {
+        vileBand.get(suspectNumber).setFeature((String) data.get(key));
+      }else if(key.contains("auto")) {
+        vileBand.get(suspectNumber).setAuto((String) data.get(key));
+      }else if(key.contains("clothing")) {
+        randomClothing = false;
+        vileBand.get(suspectNumber).setClothing((String) data.get(key));
+      }else if(key.contains("color")) {
+        vileBand.get(suspectNumber).setClothingColor((String) data.get(key));
       }
     }
+
+    if(randomClothing){
+      Log.d("INTRO1 onSuccesFirebaseSuspects", "Random Clothings");
+      vileBand.get(suspectNumber).setClothingRandom();
+    }
+
+    Log.d("onSuccesFirebaseSuspects", "Suspect: " + suspectNumber + "\n" + vileBand.get(suspectNumber).suspectToJSON());
   }
+
 
   //FUNCION QUE HACER CUANDO SE COMPLETA LA CARGA DE DATOS DE FIREBASE
   public void onCompleteFirebaseData(){
     UtilityClassCountries.getInstance().setList(countries);
+    UtilityClassSuspects.getInstance().setList(vileBand);
     startActivity(mainIntent);
   }
 
   //FUNCION QUE HACE CUANDO FALLA LA CARGA DE DATOS DE FIREBASE
-  public void onFailFirebaseData(){
-
+  public void onFailFirebaseData(String from){
+    //CARGAR UN JASON CON LA ULTIMA INFORMACION CARGADA DE CADA PAIS
+    //TODO CARGAR INFORMACION CUANDO FALLA LA CONEXION CON FIREBASE POSIBLEMENTE DETENER LA CARGA
   }
 
 }

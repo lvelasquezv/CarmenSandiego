@@ -10,7 +10,6 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:id="@+id/GLMaster"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
@@ -21,14 +20,12 @@
         app:layout_constraintBottom_toTopOf="@+id/GLMasterOptions">
 
         <LinearLayout
-            android:id="@+id/GLIzq"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/RLPaisTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -56,7 +53,6 @@
             </LinearLayout>
 
             <RelativeLayout
-                android:id="@+id/LLImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -65,7 +61,6 @@
                 android:background="@drawable/round_shape_rect">
 
                 <TextView
-                    android:id="@+id/TVImage"
                     style="@style/TextInGame"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -75,7 +70,6 @@
                 </TextView>
 
                 <ScrollView
-                    android:id="@+id/SVIntroMision"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="@dimen/marginsLayouts"
@@ -128,14 +122,12 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/GLDer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:layout_weight="1">
 
             <RelativeLayout
-                android:id="@+id/LLInfoInvestigation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -197,7 +189,6 @@
                                 android:orientation="vertical">
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsSex"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -210,7 +201,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsHobby"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -223,7 +213,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsHair"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -236,7 +225,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsFeature"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -249,7 +237,6 @@
                                 </TextView>
 
                                 <TextView
-                                    android:id="@+id/TVInfoSuspectsAuto"
                                     android:layout_width="wrap_content"
                                     android:layout_height="@dimen/alturaViewsMin"
 
@@ -339,7 +326,6 @@
                         </LinearLayout>
 
                         <Button
-                            android:id="@+id/BTbuscarEnBaseDeDatos"
                             android:layout_width="wrap_content"
                             android:layout_height="@dimen/alturaViewsMin"
                             android:layout_marginTop="16dp"
@@ -377,7 +363,6 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
-            android:id="@+id/BTOp1"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="0"
@@ -388,7 +373,6 @@
             android:onClick="conexiones">
         </Button>
         <Button
-            android:id="@+id/BTOp2"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="1"
@@ -399,7 +383,6 @@
             android:onClick="viajar">
         </Button>
         <Button
-            android:id="@+id/BTOp3"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="2"
@@ -410,7 +393,6 @@
             android:onClick="investigar">
         </Button>
         <Button
-            android:id="@+id/BTOp4"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_column="3"
