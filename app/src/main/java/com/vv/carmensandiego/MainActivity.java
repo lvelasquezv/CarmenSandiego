@@ -1040,9 +1040,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         btNuevaMision.setVisibility(View.VISIBLE);
       });
     });
-
-
-
   }
 
   //FUNCION PARA REINICIAR EL JUEGO
