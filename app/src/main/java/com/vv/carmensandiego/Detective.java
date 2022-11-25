@@ -16,12 +16,15 @@ public class Detective {
   public String rank;
   public Integer money;
   public Integer hour = 9;
+  public Integer totalHours = 0;
   public String hourToShow = "9";
   public String ampm = "A.M.";
   public String dia = "LUNES";
   public String nivel;
   public List<String> paisesVisitados = new ArrayList<String>();
   public List<Boolean> paisesEnLaRutaLadron = new ArrayList<>();
+  public Boolean encontrado = false;
+  public String sospechoso = "";
 
   public Detective() {}
 
@@ -54,6 +57,9 @@ public class Detective {
     return paisesVisitados.get(index);
   }
 
+  public Boolean getEncontrado(){ return encontrado; }
+  public Integer getTotalHours(){ return totalHours; }
+
 
   public void setName(String name){ this.name = name;   }
   public void setRank(String rank){ this.rank = rank; }
@@ -67,6 +73,22 @@ public class Detective {
   public void addPaisVisitado(String pais){ this.paisesVisitados.add(pais); }
   public void setPaisesEnLaRutaLadron(Boolean rutaLadron){ this.paisesEnLaRutaLadron.add(rutaLadron); }
 
+  public void setEncontrado(Boolean encontrado){ this.encontrado = encontrado; }
+
+  public void addTime(Integer add){ this.totalHours += add; }
+  public void initTotalHours(){ this.totalHours = 0; }
+
+
+  public void initNewGame(){
+    this.hour = 9;
+    this.totalHours = 0;
+    this.hourToShow = "9";
+    this.ampm = "A.M.";
+    this.dia = "LUNES";
+    this.paisesVisitados = new ArrayList<String>();
+    this.paisesEnLaRutaLadron = new ArrayList<>();
+    this.encontrado = false;
+  }
 
 
 }

@@ -41,7 +41,7 @@ public class Suspects {
 
   public Boolean thief = false;
   public String stolenItem = "";
-  public List<String> visitedCountries = new ArrayList<>();
+  public List<String> visitedCountries;
   public List<Double> distancias = new ArrayList<>();
 
   public void setClothingRandom(){
@@ -101,6 +101,9 @@ public class Suspects {
 
 
   public void setVisitedCountries(int level, List<String> countries){
+    //INICIALIZAR
+    visitedCountries = new ArrayList<>();
+
     int numberCountries;
     if(level == 1){
       numberCountries = 4;
@@ -111,9 +114,10 @@ public class Suspects {
     }else if(level == 4){
       numberCountries = 7;
     }else{
-      numberCountries = 3;
+      numberCountries = 4;
     }
 
+    Log.d("Suspects setVisitedCountries", "L117 visitedCountries = " + visitedCountries);
     int random;
     String country;
     int addCountry = 0;
@@ -156,11 +160,13 @@ public class Suspects {
 
     resumenMap.put("stolenItem", stolenItemMap);
 
-    if(!visitedCountries.isEmpty()){
-      Map<String, String> countriesMap = new HashMap<>();
-      for(int i = 0; i < visitedCountries.size(); i++){
-        countriesMap.put(String.valueOf(i), visitedCountries.get(i));
-        resumenMap.put("countries", countriesMap);
+    if(visitedCountries != null){
+      if(!visitedCountries.isEmpty()){
+        Map<String, String> countriesMap = new HashMap<>();
+        for(int i = 0; i < visitedCountries.size(); i++){
+          countriesMap.put(String.valueOf(i), visitedCountries.get(i));
+          resumenMap.put("countries", countriesMap);
+        }
       }
     }
 

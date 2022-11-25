@@ -147,7 +147,7 @@ public class Util{
     toneGen.stopTone();
 
     String text = diasSemana[indexDiaSiguiente] + "/" + horaPresentar + "/" +franjaHoraria + "/" + hora;
-    Log.d("NUEVO HORARIO", text );
+    //Log.d("NUEVO HORARIO", text );
     toneGen.release();
     return text;
   }
@@ -201,7 +201,7 @@ public class Util{
       }
       toneGen.stopTone();
       String text = diasSemana[indexDiaSiguiente] + " " + horaPresentar +" "+franjaHoraria;
-      Log.d("NUEVO HORARIO", text );
+      //Log.d("NUEVO HORARIO", text );
 
       tvDayHour.setText(text);
 
