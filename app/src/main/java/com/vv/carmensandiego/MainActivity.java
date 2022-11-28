@@ -25,8 +25,10 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -53,26 +55,39 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   SharedPreferences sharedPref;
   SharedPreferences.Editor editor;
 
+  //INTERFACE IZQUIERDO
+  LinearLayout llIzquierdo;
+
   //INTEFACE IZQUIERDO SUPERIOR
+  LinearLayout llPaisActualYHora;
   TextView tvPaisActual;
   TextView tvHoraActual;
+
   //INTERFACE IZQUIERDO INFERIOR
+  RelativeLayout rlIzqInf;
+  //TRIVIAS, IMAGEN DEL PAIS
+  ScrollView svImageTrivias;
   LinearLayout llImageCountry;
   TextView tvTextTrivias;
+  ImageView ivCountry;
   Button btNuevaMision;
   Button btAceptarNuevaMision;
-
+  //MISION ACTUAL
   ScrollView svIntroMision;
-  TextView tvWritingIntro;
-  TextView tvIntroMision;
+  LinearLayout llIntroYMision;
+  TextView tvWritingIntroSaludo;
   EditText ETdetectiveName;
-  Button btIniciar;
+  TextView tvMision;
+  Button btIniciarMision;
 
   //INTEFACE DERECHO
-  TextView tvIntroSuspectTitulo;
+  LinearLayout llDerecho;
+  RelativeLayout rlDer;
+  //NOTAS DE LA INVESTIGACION
   TextView tvInfoInvestigacion;
+  //BASE DE DATOS INTERPOL
+  TextView tvIntroSuspectTitulo;
   ScrollView svInfoSuspects;
-
   AutoCompleteTextView actvSex;
   AutoCompleteTextView actvHobby;
   AutoCompleteTextView actvHair;
@@ -105,9 +120,11 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   int regresarARuta = 0;
 
   //OPCIONES DEL JUEGO
-  Thread threadReloj = null;
+  //Thread threadReloj = null;
   //Handler handler = null;
-  Runnable mRunnableReloj = null;
+  //Runnable mRunnableReloj = null;
+  final Executor mExecutor = Executors.newSingleThreadExecutor(); // change according to your requirements
+  final Handler mHandler = new Handler(Looper.getMainLooper());
 
 
   public MainActivity() {
@@ -125,18 +142,50 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     editor = sharedPref.edit();
 
     //INICIALIZAR VARIABLES DE INTERFACE IZQUIERDO
+    llIzquierdo = findViewById(R.id.LLIzquierdo);
     //SUPERIOR
+    llPaisActualYHora = findViewById(R.id.llPaisActualYHora);
     tvPaisActual = findViewById(R.id.TVPaisActual);
     tvHoraActual = findViewById(R.id.TVHoraActual);
+
     //INFERIOR
+    rlIzqInf = findViewById(R.id.RLIzqInf);
+    //LINEAR LAYOUT IMAGE COUNTRY - TRIVIAS
+    svImageTrivias = findViewById(R.id.SVImageTrivias);
     llImageCountry = findViewById(R.id.LLImageCountry);
     tvTextTrivias = findViewById(R.id.tvTextTrivias);
+    ivCountry = findViewById(R.id.ivCountry);
     btNuevaMision = findViewById(R.id.btNuevaMision);
-    btAceptarNuevaMision = findViewById(R.id.btAceptarNuevaMision);
+    btNuevaMision.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        String buttonTag = view.getTag().toString();
+        Log.d("MAIN button NuevaMision", buttonTag);
+        if(buttonTag.contains("NUEVA_MISION")){
+          initNewMision();
+          nuevaMision();
+          mostrarBotonNuevaMision();
+        }else if(buttonTag.contains("ACEPTAR_MISION")){
 
+          //REINICIAR VALORES DETECTIVE
+          detective.initNewGame();
+          setPaisActual();
+          setHoraActual();
+          //ACTIVAR O DESACTIVAR VIEWS
+          initInterfaceTriviasAndImage();
+          //SET TRIVIAS
+          setTrviasCountry();
+
+        }
+      }
+    });
+    //btAceptarNuevaMision = findViewById(R.id.btAceptarNuevaMision);
+
+
+    //INTRO & MISION
     svIntroMision = findViewById(R.id.SVIntroDetective);
-    tvWritingIntro = findViewById(R.id.TVWriterIntro);
-    tvIntroMision = findViewById(R.id.TVIntroMision);
+    llIntroYMision = findViewById(R.id.LLIntroAndMision);
+    tvWritingIntroSaludo = findViewById(R.id.TVWriterIntroSaludo);
     ETdetectiveName = findViewById(R.id.ETDetectiveName);
     ETdetectiveName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
       @Override
@@ -149,17 +198,20 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         return false;
       }
     });
-    btIniciar = findViewById(R.id.btIniciar);
-    btIniciar.setVisibility(View.INVISIBLE);
+    tvMision = findViewById(R.id.TVIntroMision);
+    btIniciarMision = findViewById(R.id.btIniciar);
+    btIniciarMision.setVisibility(View.INVISIBLE);
 
     //INICIALIZAR VARIABLES DE INTERFACE DERECHA
+    llDerecho = findViewById(R.id.LLDerecho);
+    rlDer = findViewById(R.id.RLDer);
     //INFORMACION TESTIGOS Y NOTAS PAIS
     tvInfoInvestigacion = findViewById(R.id.TVInfoInvestigation);
     //INFORMACION INTERPOL SOSPECHOSOS
-    svInfoSuspects = findViewById(R.id.SVInfoSuspects);
     tvIntroSuspectTitulo = findViewById(R.id.TVInfoSuspectsTitulo);
+    svInfoSuspects = findViewById(R.id.SVInfoSuspects);
 
-    setInfoInvestVisible();
+    initInfo();
 
     actvSex = findViewById(R.id.ACsex);
     actvHobby = findViewById(R.id.AChobby);
@@ -172,18 +224,11 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     //INTERFACE OPCIONES INFERIORES
     glMasterOptions = findViewById(R.id.GLMasterOptions);
     glMasterOptions.setVisibility(View.INVISIBLE);
+
     btConexiones = findViewById(R.id.btConexiones);
     btViajar = findViewById(R.id.btViajar);
     btInvestigar = findViewById(R.id.btInvestigar);
     btInterpol = findViewById(R.id.btInterpol);
-
-    //handler = new Handler(Looper.getMainLooper());
-    mRunnableReloj = new Runnable(){
-      @Override
-      public void run() {
-        tvHoraActual.setText(detective.getTime());
-      }
-    };
 
   }
 
@@ -205,80 +250,162 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     moveTaskToBack(true);
   }
 
-  //FUNCION PARA INICIAR EL JUEGO
-  public void initGame(){
-    setInfoInvestVisible();
-    initMision();
-    //INICIALIZAR DETECTIVE
-    initDetective(ETdetectiveName.getText().toString());
-    //INICIALIZAR PAISES
-    initCountries();
-    //INICIALIZAR SOSPECHOSOS
-    initSuspects();
-    //SET TRIVIAS
-    setTrviasCountry();
-
-    enviarTextoEntrada();
+  /*
+  *INTERFACE IZQUIERDA
+   */
+  public void ocultarInterfaceIzquierdo(){    llIzquierdo.setVisibility(View.INVISIBLE);  }
+  public void mostrarInterfaceIzquierdo(){    llIzquierdo.setVisibility(View.VISIBLE);  }
+  // SUPERIOR
+  public void cleanPaisActual(){    tvPaisActual.setText("");  }
+  public void cleanHoraActual(){    tvHoraActual.setText("");  }
+  public void setPaisActual(){    tvPaisActual.setText(objetosPaises.get(nombrePaises.get(paisActual)).getCapital());  }
+  public void setHoraActual(){    tvHoraActual.setText(detective.getTime());  }
+  public void cleanInterfacePaisYHoraActual(){
+    cleanPaisActual();
+    cleanHoraActual();
+  }
+  public void setInterfacePaisYHoraActual(){
+    setPaisActual();
+    setHoraActual();
+  }
+  public void ocultarInterfacePaisYHoraActual(){
+    llPaisActualYHora.setVisibility(View.INVISIBLE);
+  }
+  public void mostrarInterfacePaisYHoraActual(){
+    llPaisActualYHora.setVisibility(View.VISIBLE);
   }
 
-  //INICIAR ELEMENTOS DEL LAYOUT DEL LADO IZQUIRDO
-  public void initMision(){
-    glMasterOptions.setVisibility(View.INVISIBLE);
-    llImageCountry.setVisibility(View.INVISIBLE);
-    svIntroMision.setVisibility(View.VISIBLE);
-    btIniciar.setVisibility(View.INVISIBLE);
+
+  // INFERIOR
+    //INF IMAGEN Y TRIVIAS
+  public void cleanTrivias(){    tvTextTrivias.setText("");  }
+  public void cleanImage(){    ivCountry.setImageDrawable(null);  }
+  public void setTrivia(String trivia){    tvTextTrivias.setText(trivia);  Log.d("SET TRIVIA", trivia);}
+  public void setImage(String country){    Log.d("MAIN setImage", "set image of " + country);  }
+  public void ocultarBotonNuevaMision(){    btNuevaMision.setVisibility(View.INVISIBLE);  }
+  public void mostrarBotonNuevaMision(){    btNuevaMision.setVisibility(View.VISIBLE);  }
+  public void setButonNuevaMisionTag(String tag){    btNuevaMision.setTag(tag);  }
+  public void setButonNuevaMisionText(String text){   btNuevaMision.setText(text);  }
+  public void ocultarInterfaceImageTrivias(){    svImageTrivias.setVisibility(View.INVISIBLE);  }
+  public void mostrarInterfaceImageTrivias(){    svImageTrivias.setVisibility(View.VISIBLE);  }
+  public void cleanInterfaceImageTrivias(){
+    cleanTrivias();
+    cleanImage();
+    ocultarBotonNuevaMision();
   }
-  public void initImage(){
-    glMasterOptions.setVisibility(View.VISIBLE);
-    llImageCountry.setVisibility(View.VISIBLE);
-    svIntroMision.setVisibility(View.INVISIBLE);
+  public void setInterfaceImageTrivias(String trivia, String country){
+    setTrivia(trivia);
+    setImage(country);
+    ocultarBotonNuevaMision();
+  }
+  public void setInterfaceImageTriviasComoNuevaMision(String mision, String tag){
+    setTrivia(mision);
+    mostrarBotonNuevaMision();
+    setButonNuevaMisionTag(tag);
   }
 
-  //FUNCION PARA INICIAR UNA NUEVA MISION
-  public void askNewMision(){
-    tvPaisActual.setText("");
+
+    //INTERFACE INTRO Y MISION
+  public void cleanIntroSaludo(){    tvWritingIntroSaludo.setText("");  }
+  public void cleanNameDetective(){    ETdetectiveName.setText("");  }
+  public void cleanMision(){    tvMision.setText("");  }
+  public void setIntroSaludo(String saludo){    tvWritingIntroSaludo.setText(saludo);  }
+  public void setMision(String mision){    tvMision.setText(mision);  }
+  public void ocultarButonIniciarMision(){    btIniciarMision.setVisibility(View.INVISIBLE);  }
+  public void mostrarButonIniciarMision(){    btIniciarMision.setVisibility(View.VISIBLE);  }
+  public void ocultarInterfaceIntroYMision(){    svIntroMision.setVisibility(View.INVISIBLE);  }
+  public void mostrarInterfaceIntroYMision(){    svIntroMision.setVisibility(View.VISIBLE);  }
+  public void cleanInterfaceIntroYMision(){
+    cleanIntroSaludo();
+    cleanNameDetective();
+    cleanMision();
+  }
+  public void setInterfaceIntroYMision(String saludo, String mision){
+    setIntroSaludo(saludo);
+    setMision(mision);
+  }
+
+  /*
+  *INTERFACE DERECHA
+   */
+  public void ocultarInterfaceDerecho(){    llDerecho.setVisibility(View.INVISIBLE);  }
+  public void mostrarInterfaceDerecho(){    llDerecho.setVisibility(View.VISIBLE);  }
+    //INFO DE LA INVESTIGACION
+  public void cleanInfoInvestigacion(){    tvInfoInvestigacion.setText("");  }
+  public void setInfoInvestigacion(String info){    tvInfoInvestigacion.setText(info);  }
+  public void cleanInterfaceInfoInvestigacion(){
+    cleanInfoInvestigacion();
+  }
+  public void setInterfaceInfoInvestigacion(String info){
+    setInfoInvestigacion(info);
+  }
+  public void ocultarInterfaceInfoInvestigacion(){
+    tvInfoInvestigacion.setVisibility(View.INVISIBLE);
+  }
+  public void mostrarInterfaceInfoInvestigacion(){
+    tvInfoInvestigacion.setVisibility(View.VISIBLE);
+  }
+
+    //BASE DE DATOS INTERPOL
+  public void cleanTituloBaseDeDatos(){    tvIntroSuspectTitulo.setText("");  }
+  public void setTituloBaseDeDatos(String titulo){    tvIntroSuspectTitulo.setText(titulo);  }
+  public void ocultarTituloBaseDeDatos(){
+    tvIntroSuspectTitulo.setVisibility(View.INVISIBLE);
+  }
+  public void mostrarTituloBaseDeDatos(){
+    tvIntroSuspectTitulo.setVisibility(View.VISIBLE);
+  }
+  public void cleanSuspectData(){
     actvSex.setText("");
     actvHobby.setText("");
     actvHair.setText("");
     actvFeature.setText("");
     actvAuto.setText("");
-    glMasterOptions.setVisibility(View.INVISIBLE);
-    llImageCountry.setVisibility(View.VISIBLE);
-    svIntroMision.setVisibility(View.INVISIBLE);
-    btIniciar.setVisibility(View.INVISIBLE);
   }
-
-  public void initNewMision(){
-    glMasterOptions.setVisibility(View.INVISIBLE);
-    llImageCountry.setVisibility(View.VISIBLE);
-    svIntroMision.setVisibility(View.INVISIBLE);
-    //INICIALIZAR PAISES
-    initCountries();
-    //INICIALIZAR SOSPECHOSOS
-    initSuspects();
-
+  public void setSuspectData(){
+    actvSex.setText("");
+    actvHobby.setText("");
+    actvHair.setText("");
+    actvFeature.setText("");
+    actvAuto.setText("");
   }
-
-  //FUNCION DE RESPUESTA AL BOTON INICIAR AL FINAL DEL TEXTO MISION
-  public void initGame(View view){
-    //ESCONDER VIEWS
-    initImage();
-    setTVPaisActual();
+  public void cleanInterfaceBaseDeDatos(){
+    cleanSuspectData();
   }
-
-  //SET LINEAR LAYOUTS INFO
-  public void setInfoInvestVisible(){
-    tvInfoInvestigacion.setVisibility(View.VISIBLE);
-    tvInfoInvestigacion.setText("");
-    tvIntroSuspectTitulo.setVisibility(View.INVISIBLE);
-    svInfoSuspects.setVisibility(View.INVISIBLE);
+  public void setInterfaceBaseDeDatos(){
+    setTituloBaseDeDatos("BASE DE DATOS INTERPOL");
+    setSuspectData();
   }
-  public void setInfoSuspectstVisible(){
-    tvInfoInvestigacion.setVisibility(View.INVISIBLE);
-    tvInfoInvestigacion.setText("");
-    tvIntroSuspectTitulo.setVisibility(View.VISIBLE);
+  public void mostrarInterfaceBaseDeDatos(){
+    mostrarTituloBaseDeDatos();
     svInfoSuspects.setVisibility(View.VISIBLE);
   }
+  public void ocultarInterfaceBaseDeDatos(){
+    ocultarTituloBaseDeDatos();
+    svInfoSuspects.setVisibility(View.INVISIBLE);
+  }
+
+
+  /*
+  *INTERFACE INFERIOR
+   */
+  //FUNCION OCULTAR BOTONES DE OPCIONES
+  public void ocultarOpciones(){    glMasterOptions.setVisibility(View.INVISIBLE);  }
+  public void mostrarOpciones(){    glMasterOptions.setVisibility(View.VISIBLE);  }
+  //FUNCION QUE DESACTIVA LAS OPCIONES DE LOS BOTONES MIENTRAS EL USUARIO VIAJA
+  public void desactivarOpciones(){
+    btConexiones.setClickable(false);
+    btViajar.setClickable(false);
+    btInvestigar.setClickable(false);
+    btInterpol.setClickable(false);
+  }
+  public void activarOpciones(){
+    btConexiones.setClickable(true);
+    btViajar.setClickable(true);
+    btInvestigar.setClickable(true);
+    btInterpol.setClickable(true);
+  }
+
   //OPCIONES DE SELECCION DE CARACTERISTICAS DE LOS SOSPECHOSOS
   public void setAutoCompleteTextViewsOptions(){
     ArrayAdapter<String> adapter;
@@ -293,6 +420,99 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.autos);
     actvAuto.setAdapter(adapter);
   }
+
+
+  /*
+  *FUNCIONES INICIAR GAME
+   */
+
+  //FUNCION PARA INICIAR EL JUEGO
+  public void initGame(){
+    initMision();
+    //INICIALIZAR DETECTIVE
+    initDetective(ETdetectiveName.getText().toString());
+    //INICIALIZAR PAISES
+    initCountries();
+    //INICIALIZAR SOSPECHOSOS
+    initSuspects();
+
+    enviarTextoEntrada();
+  }
+
+
+  //INICIAR ELEMENTOS DEL LAYOUT DEL LADO IZQUIRDO
+  public void initMision(){
+    ocultarOpciones();
+    cleanInterfaceImageTrivias();
+    ocultarInterfaceImageTrivias();
+    mostrarInterfaceIntroYMision();
+    ocultarButonIniciarMision();
+  }
+  public void initInterfaceTriviasAndImage(){
+    mostrarOpciones();
+    cleanInterfaceImageTrivias();
+    mostrarInterfaceImageTrivias();
+    ocultarInterfaceIntroYMision();
+  }
+
+  //FUNCION PARA INICIAR UNA NUEVA MISION
+  public void askNewMision(){
+    cleanInterfacePaisYHoraActual();
+    cleanInterfaceBaseDeDatos();
+    ocultarOpciones();
+    cleanInterfaceImageTrivias();
+    mostrarInterfaceImageTrivias();
+    ocultarInterfaceIntroYMision();
+    cleanInterfaceInfoInvestigacion();
+  }
+
+  public void initNewMision(){
+    ocultarOpciones();
+    mostrarInterfaceImageTrivias();
+    ocultarInterfaceIntroYMision();
+    //INICIALIZAR PAISES
+    initCountries();
+    //INICIALIZAR SOSPECHOSOS
+    initSuspects();
+
+  }
+
+  //FUNCION DE RESPUESTA AL BOTON INICIAR AL FINAL DEL TEXTO MISION
+  public void initGameAfterAcceptMision(View view){
+    //ESCONDER VIEWS
+    initInterfaceTriviasAndImage();
+    setPaisActual();
+    setHoraActual();
+    setTrviasCountry();
+  }
+
+  //SET LINEAR LAYOUTS INFO
+  public void initInfo(){
+    cleanInterfacePaisYHoraActual();
+    mostrarInterfacePaisYHoraActual();
+
+    cleanInterfaceImageTrivias();
+    ocultarInterfaceImageTrivias();
+
+    cleanInterfaceInfoInvestigacion();
+    mostrarInterfaceInfoInvestigacion();
+    ocultarInterfaceBaseDeDatos();
+
+    mostrarInterfaceIntroYMision();
+  }
+
+  public void onClicOptions(){
+    cleanInterfaceInfoInvestigacion();
+    mostrarInterfaceInfoInvestigacion();
+    ocultarInterfaceBaseDeDatos();
+  }
+
+  public void setInfoSuspectstVisible(){
+    cleanInterfaceInfoInvestigacion();
+    ocultarInterfaceInfoInvestigacion();
+    mostrarInterfaceBaseDeDatos();
+  }
+
 
   //INICIALIZAR OBJETO DETECTIVE
   public void initDetective(String name){
@@ -311,7 +531,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     detective.setRank(rank);
     detective.setName(name);
 
-    setTVHoraActual();
   }
 
   //INICIALIZAR OBJECTOS PAISES
@@ -398,19 +617,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
   }
 
-  //SET TV PAIS ACTUAL
-  public void setTVPaisActual(){
-    int index = nombrePaises.get(paisActual);
-    String capital = objetosPaises.get(index).getCapital();
-    tvPaisActual.setText(capital);
-  }
-
-  //SET TV HORA ACTUAL
-  public void setTVHoraActual(){
-    String hora = detective.getTime();
-    tvHoraActual.setText(hora);
-  }
-
   //SET TV IMAGE / TRIVIA COUNTRY
   public void setTrviasCountry(){
     int index = nombrePaises.get(paisActual);
@@ -424,14 +630,29 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       }
       String trivia = "triv"+randomTrivia;
       Log.d("setTrviasCountry", "Trivia = " + trivia);
-      tvTextTrivias.setText(objetosPaises.get(index).getTrivia(trivia));
+      setTrivia(objetosPaises.get(index).getTrivia(trivia));
     }
   }
 
-  //SET TV IMAGE OF COUNTRY
-  public void setImageCountry(){
-    Log.d("setImageCountry", "setImageOfCountry");
+  //FUNCION QUE CREARA EL TEXTO DE INTRO DEL JUEGO
+  public void enviarTextoEntrada(){
+    String texto = "\nHola " + detective.getName() + " \n" +
+      "Tu rango actual es:" + "\n" + detective.getRank() + "\n" + "\n" + "\n" +
+      "****FLASH****" + "\n" + "\n" +
+      "Nuevo evento:" + "\n" +
+      "se ha reportado el robo del objeto:"+ "\n"  +
+      objetoRobado + "\n"  +
+      "en " + paisActual + "\n" + "\n" +
+      "se sospecha de la banda V.I.L.E." +
+      " Por favor dirijase al lugar e investigue," +
+      " tiene hasta el domingo antes de las 18:00 " + "\n" + "\n" +
+      "Buena suerte";
+    //typing(texto);
+    setMision(texto);
+    svIntroMision.fullScroll(View.FOCUS_DOWN);
+    mostrarButonIniciarMision();
   }
+
 
   //FUNCION QUE GENERARA LOS DESTINOS POSIBLES
   public void siguientesPaises(String paisActual){
@@ -618,26 +839,11 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
   }
 
-  //FUNCION QUE DESACTIVA LAS OPCIONES DE LOS BOTONES MIENTRAS EL USUARIO VIAJA
-  public void desactivarOpciones(){
-    btConexiones.setClickable(false);
-    btViajar.setClickable(false);
-    btInvestigar.setClickable(false);
-    btInterpol.setClickable(false);
-  }
-  public void activarOpciones(){
-    btConexiones.setClickable(true);
-    btViajar.setClickable(true);
-    btInvestigar.setClickable(true);
-    btInterpol.setClickable(true);
-  }
 
-  final Executor mExecutor = Executors.newSingleThreadExecutor(); // change according to your requirements
-  final Handler mHandler = new Handler(Looper.getMainLooper());
+
 
   //FUNCION QUE CAMBIA EL RELOJ SEGUN EL CALCULO DEL NUEVO TIEMPO
   public void animarReloj(Integer diferenciaReal, Integer tiempoViaje){
-
 
     mExecutor.execute(() -> {
         for (int i = 0; i < diferenciaReal; i++) {
@@ -648,9 +854,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
           detective.setAMPM(text.split("/")[2]);
           detective.setHour(Integer.parseInt(text.split("/")[3]));
 
-          mHandler.post(() -> {
-            tvHoraActual.setText(detective.getTime());
-          });
+          mHandler.post(this::setHoraActual);
 
           try{
             if(i > tiempoViaje){
@@ -666,51 +870,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         }
       terminoReloj();
     });
-
-
-/*
-
-    if(threadReloj == null){
-      threadReloj = new Thread() {
-        public void run() {
-          for (int i = 0; i < diferenciaReal; i++) {
-            String text = Util.newDayHour(detective.getHour(), detective.getDia());
-            //String text = diasSemana[indexDiaSiguiente] + "/" + horaPresentar + "/" +franjaHoraria + "/" + hora;
-            detective.setDia(text.split("/")[0]);
-            detective.setHourToShow(text.split("/")[1]);
-            detective.setAMPM(text.split("/")[2]);
-            detective.setHour(Integer.parseInt(text.split("/")[3]));
-
-            mHandler.post(mRunnableReloj);
-
-            /*
-            runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                tvHoraActual.setText(detective.getTime());
-              }
-            });
-
-
-
-            if(i > tiempoViaje){
-              SystemClock.sleep(150);
-              //Thread.sleep(150);
-              tvPaisActual.setText("Descansando");
-            }else{
-              SystemClock.sleep(300);
-              //Thread.sleep(300);
-              tvPaisActual.setText("Viajando");
-            }
-
-          }
-          terminoReloj();
-        }
-      };
-      threadReloj.start();
-    }
-
- */
 
   }
 
@@ -739,7 +898,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     detective.addTime(diferenciaReal);
 
     animarReloj(diferenciaReal, tiempoDeViaje);
-    setTVPaisActual();
+    setPaisActual();
     piastasEnElLugar(lugar);
 
   }
@@ -837,34 +996,29 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     }
 
     mensaje = personas[randomPersonas] + ": \n" + pistas.get(randomPista);
-    mostrarPista(mensaje);
-
+    setInfoInvestigacion(mensaje);
   }
 
-  //FUNCION QUE CARGARA LA PISTA GENERADA EN EL TEXTVIEW
-  public void mostrarPista(String mensaje){
-    tvInfoInvestigacion.setText(mensaje);
-  }
 
 
   //FUNCION DE RESPUESTA A BOTON CONEXIONES
   public void conexiones(View view){
     //VER POSIBLES DESTINOS
-    setInfoInvestVisible();
+    onClicOptions();
     construirAlertaConexiones("CONEXIONES");
   }
 
   //FUNCION DE RESPUESTA A BOTON VIAJAR
   public void viajar(View view){
     //VER POSIBLES DESTINOS
-    setInfoInvestVisible();
+    onClicOptions();
     construirAlertaConexiones("VIAJAR");
   }
 
   //FUNCION DE RESPUESTA A BOTON INVESTIGAR
   public void investigar(View view){
     //VER LUGARES DEL PAIS ACTUAL QUE SE PUEDEN VISITAR
-    setInfoInvestVisible();
+    onClicOptions();
     construirAlertaConexiones("INVESTIGAR");
   }
 
@@ -872,11 +1026,18 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   public void interpol(View view){
     //1.HACER VISIBLE EL LINEARLAYOUT CON LAS OPCIONES
     setInfoSuspectstVisible();
+    //TODO:LIMPIAR INTERFACE TIVIAS, MOSTRAR REGISTRO SOSPECHOSOS EN ESE LUGAR
   }
 
   //FUNCION DE RESPUESTA A BOTON BUSCAR
   public void buscarSospechoso(View view){
-    Log.d("INTERPOL", "sex = " + actvSex.getText().toString());
+    Log.d("INTERPOL", "Sex      = " + actvSex.getText().toString());
+    Log.d("INTERPOL", "Hobby    = " + actvHobby.getText().toString());
+    Log.d("INTERPOL", "Hair     = " + actvHair.getText().toString());
+    Log.d("INTERPOL", "Feature  = " + actvFeature.getText().toString());
+    Log.d("INTERPOL", "Auto     = " + actvAuto.getText().toString());
+
+
   }
 
   //CONSTRUCCION DE ALERTAS CON RESPUESTAS
@@ -938,28 +1099,40 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     dialog = builder.show();
   }
 
-  //FUNCION QUE CREARA EL TEXTO DE INTRO DEL JUEGO
-  public void enviarTextoEntrada(){
-    String texto = "\nHola " + detective.getName() + " \n" +
-      "Tu rango actual es:" + "\n" + detective.getRank() + "\n" + "\n" + "\n" +
-      "****FLASH****" + "\n" + "\n" +
-      "Nuevo evento:" + "\n" +
-      "se ha reportado el robo del objeto:"+ "\n"  +
-      objetoRobado + "\n"  +
-      "en " + paisActual + "\n" + "\n" +
-      "se sospecha de la banda V.I.L.E." +
-      " Por favor dirijase al lugar e investigue," +
-      " tiene hasta el domingo antes de las 18:00 " + "\n" + "\n" +
-      "Buena suerte";
-    //typing(texto);
-    tvIntroMision.setText(texto);
-    svIntroMision.fullScroll(View.FOCUS_DOWN);
-    btIniciar.setVisibility(View.VISIBLE);
-  }
 
   //FUNCION QUE SIMULA EL INGRESO DEL TEXTO COMO MAQUINA DE ESCRIBIR
   public void typing(String newText){
 
+    mExecutor.execute(() -> {
+      //Background work here
+      MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.typewriter15x);
+      for (int i = 0; i < newText.length(); i++){
+        char c = newText.charAt(i);
+        //Process char
+        StringBuilder stringBuilder = new StringBuilder();
+        String text = tvMision.getText().toString();
+        String finalText =  stringBuilder.append(text).append(c).toString();
+        //Log.d("TYPING", "Text = " + tvIntroMision.getText().toString());
+        mp.start();
+
+        mHandler.post(() -> {
+            setMision(finalText);
+            svIntroMision.fullScroll(View.FOCUS_DOWN);
+        });
+        mp.pause();
+        try {
+          Thread.sleep(80);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+
+        mp.seekTo(0);
+        mp.release();
+      }
+    });
+
+
+    /*
     new Thread() {
       public void run() {
         MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.typewriter15x);
@@ -975,7 +1148,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
             runOnUiThread(new Runnable() {
               @Override
               public void run() {
-                tvIntroMision.setText(finalText);
+                setMision(finalText);
                 svIntroMision.fullScroll(View.FOCUS_DOWN);
               }
             });
@@ -989,6 +1162,8 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         mp.release();
       }
     }.start();
+
+     */
   }
 
 
@@ -1036,8 +1211,10 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       //Background work here
       mHandler.post(() -> {
         askNewMision();
-        tvTextTrivias.setText(mensaje);
-        btNuevaMision.setVisibility(View.VISIBLE);
+        setTrivia(mensaje);
+        mostrarBotonNuevaMision();
+        setButonNuevaMisionTag("NUEVA_MISION");
+        setButonNuevaMisionText("NUEVA_MISION");
       });
     });
   }
@@ -1062,11 +1239,15 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       " tiene hasta el domingo antes de las 18:00 " + "\n" + "\n" +
       "Buena suerte";
 
-    tvHoraActual.setText("");
-    tvTextTrivias.setText("");
-    tvTextTrivias.setText(mensaje);
-    btNuevaMision.setVisibility(View.INVISIBLE);
-    btAceptarNuevaMision.setVisibility(View.VISIBLE);
+    cleanInterfacePaisYHoraActual();
+    cleanInterfaceImageTrivias();
+    setTrivia(mensaje);
+
+    setButonNuevaMisionTag("ACEPTAR_MISION");
+    setButonNuevaMisionText("ACEPTAR");
+
+    //btNuevaMision.setVisibility(View.INVISIBLE);
+    //btAceptarNuevaMision.setVisibility(View.VISIBLE);
 
   }
 
@@ -1075,12 +1256,12 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     btAceptarNuevaMision.setVisibility(View.INVISIBLE);
     //REINICIAR VALORES DETECTIVE
     detective.initNewGame();
-    setTVHoraActual();
+    setHoraActual();
     //SET TRIVIAS
     setTrviasCountry();
     //ACTIVAR O DESACTIVAR VIEWS
-    initImage();
-    setTVPaisActual();
+    initInterfaceTriviasAndImage();
+    setPaisActual();
 
   }
 
@@ -1101,15 +1282,15 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   //FUNCION TERMINAR THREAD RELOJ
   public void terminarThreadReloj(){
     //mHandler.removeCallbacks(runnableReloj);
-    threadReloj.interrupt();
-    threadReloj = null;
+    //threadReloj.interrupt();
+    //threadReloj = null;
   }
 
   @Override
   public void terminoReloj() {
     Log.d("MAIN terminoReloj", "FINALIZO THREAD");
     //terminarThreadReloj();
-    setTVPaisActual();
+    setPaisActual();
     activarOpciones();
     verificarFin();
   }

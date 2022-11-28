@@ -10,6 +10,7 @@
     tools:context=".MainActivity">
 
     <LinearLayout
+        android:id="@+id/LLMaster"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
@@ -20,12 +21,14 @@
         app:layout_constraintBottom_toTopOf="@+id/GLMasterOptions">
 
         <LinearLayout
+            android:id="@+id/LLIzquierdo"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/llPaisActualYHora"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -53,6 +56,7 @@
             </LinearLayout>
 
             <RelativeLayout
+                android:id="@+id/RLIzqInf"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="@dimen/marginsLayouts"
@@ -61,11 +65,12 @@
                 android:background="@drawable/round_shape_rect">
 
                 <ScrollView
+                    android:id="@+id/SVImageTrivias"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/marginsLayouts"
 
-                    android:visibility="visible"
+                    android:visibility="invisible"
 
                     android:fadeScrollbars="false"
                     android:scrollbarAlwaysDrawVerticalTrack="true"
@@ -80,7 +85,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="invisible">
+                        android:visibility="visible">
 
                         <TextView
                             android:id="@+id/tvTextTrivias"
@@ -99,6 +104,7 @@
 
                         <Button
                             android:id="@+id/btNuevaMision"
+                            android:tag="NuevaMision"
                             android:layout_width="wrap_content"
                             android:layout_height="@dimen/alturaViewsMin"
                             android:layout_marginTop="16dp"
@@ -112,6 +118,7 @@
                             android:onClick="reiniciarJuego">
                         </Button>
 
+                        <!--
                         <Button
                             android:id="@+id/btAceptarNuevaMision"
                             android:layout_width="wrap_content"
@@ -126,6 +133,7 @@
                             style="@style/TextInGameInterpol"
                             android:onClick="aceptarNuevaMision">
                         </Button>
+                        -->
 
                     </LinearLayout>
 
@@ -151,12 +159,13 @@
                     android:scrollbarThumbVertical="@color/Gray">
 
                     <LinearLayout
+                        android:id="@+id/LLIntroAndMision"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
                         <TextView
-                            android:id="@+id/TVWriterIntro"
+                            android:id="@+id/TVWriterIntroSaludo"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textAlignment="viewStart"
@@ -193,7 +202,7 @@
                             android:background="@drawable/round_shape_rect"
                             android:text="INICIAR"
                             style="@style/TextInGameInterpol"
-                            android:onClick="initGame">
+                            android:onClick="initGameAfterAcceptMision">
                         </Button>
                     </LinearLayout>
                 </ScrollView>
@@ -201,12 +210,14 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/LLDerecho"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:layout_weight="1">
 
             <RelativeLayout
+                android:id="@+id/RLDer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/marginsLayouts"
