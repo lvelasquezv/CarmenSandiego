@@ -44,6 +44,8 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Carmen Sandiego
@@ -70,8 +72,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   LinearLayout llImageCountry;
   TextView tvTextTrivias;
   ImageView ivCountry;
-  Button btNuevaMision;
-  Button btAceptarNuevaMision;
+
   //MISION ACTUAL
   ScrollView svIntroMision;
   LinearLayout llIntroYMision;
@@ -79,6 +80,10 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   EditText ETdetectiveName;
   TextView tvMision;
   Button btIniciarMision;
+
+  //REPORTE INTERPOL
+  ScrollView svReporteInterpol;
+  TextView tvReporteInterpol;
 
   //INTEFACE DERECHO
   LinearLayout llDerecho;
@@ -93,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   AutoCompleteTextView actvHair;
   AutoCompleteTextView actvFeature;
   AutoCompleteTextView actvAuto;
+  Button btBuscarInterpol;
 
   //INTERFACE INFERIOR OPCIONES
   GridLayout glMasterOptions;
@@ -104,19 +110,20 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   //VARIABLE DE INICIO SOSPECHOSOS
   ArrayList<Suspects> objetosSuspects;
   int idLadron;
-  List<String> paisesVisitadosLadron = new ArrayList<String>();;
+  List<String> paisesVisitadosLadron;
   String objetoRobado;
+  List<Map<String, String>> sospechosos;
 
   //VARIABLES PAISES
   Map<String, Integer> nombrePaises;
-  List<String> lugaresInvestigar  = new ArrayList<String>();
+  List<String> lugaresInvestigar;
   ArrayList<Country> objetosPaises;
 
   //VARIABLES INVESTIGADOR
   String paisActual;
   Detective detective;
-  List<String> destinos  = new ArrayList<String>();
-  List<String> nomDestinos  = new ArrayList<String>();
+  List<String> destinos;
+  List<String> nomDestinos;
   int regresarARuta = 0;
 
   //OPCIONES DEL JUEGO
@@ -155,32 +162,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     llImageCountry = findViewById(R.id.LLImageCountry);
     tvTextTrivias = findViewById(R.id.tvTextTrivias);
     ivCountry = findViewById(R.id.ivCountry);
-    btNuevaMision = findViewById(R.id.btNuevaMision);
-    btNuevaMision.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        String buttonTag = view.getTag().toString();
-        Log.d("MAIN button NuevaMision", buttonTag);
-        if(buttonTag.contains("NUEVA_MISION")){
-          initNewMision();
-          nuevaMision();
-          mostrarBotonNuevaMision();
-        }else if(buttonTag.contains("ACEPTAR_MISION")){
 
-          //REINICIAR VALORES DETECTIVE
-          detective.initNewGame();
-          setPaisActual();
-          setHoraActual();
-          //ACTIVAR O DESACTIVAR VIEWS
-          initInterfaceTriviasAndImage();
-          //SET TRIVIAS
-          setTrviasCountry();
-
-        }
-      }
-    });
+    //btNuevaMision = findViewById(R.id.btNuevaMision);
     //btAceptarNuevaMision = findViewById(R.id.btAceptarNuevaMision);
-
 
     //INTRO & MISION
     svIntroMision = findViewById(R.id.SVIntroDetective);
@@ -200,7 +184,38 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     });
     tvMision = findViewById(R.id.TVIntroMision);
     btIniciarMision = findViewById(R.id.btIniciar);
+    btIniciarMision.setTag("ACEPTAR");
+    btIniciarMision.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        String buttonTag = view.getTag().toString();
+        Log.d("MAIN button NuevaMision", buttonTag);
+        if(buttonTag.contains("ACEPTAR")){
+          //ESCONDER VIEWS
+          initInterfaceTriviasAndImage();
+          setPaisActual();
+          setHoraActual();
+          setTrviasCountry();
+        }else if(buttonTag.contains("NUEVA_MISION")){
+          initNewMision();
+          nuevaMision();
+          //REINICIAR VALORES DETECTIVE
+          detective.initNewGame();
+        }else if(buttonTag.contains("ACEPTAR_MISION")){
+          setPaisActual();
+          setHoraActual();
+          //ACTIVAR O DESACTIVAR VIEWS
+          initInterfaceTriviasAndImage();
+          //SET TRIVIAS
+          setTrviasCountry();
+        }
+      }
+    });
     btIniciarMision.setVisibility(View.INVISIBLE);
+
+    //REPORTE INTERPOL
+    svReporteInterpol = findViewById(R.id.SVReporteInterpol);
+    tvReporteInterpol = findViewById(R.id.TVReporteInterpol);
 
     //INICIALIZAR VARIABLES DE INTERFACE DERECHA
     llDerecho = findViewById(R.id.LLDerecho);
@@ -220,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     actvAuto = findViewById(R.id.ACauto);
 
     setAutoCompleteTextViewsOptions();
+    btBuscarInterpol = findViewById(R.id.btBuscarInterpol);
 
     //INTERFACE OPCIONES INFERIORES
     glMasterOptions = findViewById(R.id.GLMasterOptions);
@@ -255,7 +271,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
    */
   public void ocultarInterfaceIzquierdo(){    llIzquierdo.setVisibility(View.INVISIBLE);  }
   public void mostrarInterfaceIzquierdo(){    llIzquierdo.setVisibility(View.VISIBLE);  }
+
   // SUPERIOR
+  //TEXTO PAIS Y HORA
   public void cleanPaisActual(){    tvPaisActual.setText("");  }
   public void cleanHoraActual(){    tvHoraActual.setText("");  }
   public void setPaisActual(){    tvPaisActual.setText(objetosPaises.get(nombrePaises.get(paisActual)).getCapital());  }
@@ -275,44 +293,38 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     llPaisActualYHora.setVisibility(View.VISIBLE);
   }
 
-
   // INFERIOR
     //INF IMAGEN Y TRIVIAS
   public void cleanTrivias(){    tvTextTrivias.setText("");  }
   public void cleanImage(){    ivCountry.setImageDrawable(null);  }
   public void setTrivia(String trivia){    tvTextTrivias.setText(trivia);  Log.d("SET TRIVIA", trivia);}
   public void setImage(String country){    Log.d("MAIN setImage", "set image of " + country);  }
-  public void ocultarBotonNuevaMision(){    btNuevaMision.setVisibility(View.INVISIBLE);  }
-  public void mostrarBotonNuevaMision(){    btNuevaMision.setVisibility(View.VISIBLE);  }
-  public void setButonNuevaMisionTag(String tag){    btNuevaMision.setTag(tag);  }
-  public void setButonNuevaMisionText(String text){   btNuevaMision.setText(text);  }
   public void ocultarInterfaceImageTrivias(){    svImageTrivias.setVisibility(View.INVISIBLE);  }
   public void mostrarInterfaceImageTrivias(){    svImageTrivias.setVisibility(View.VISIBLE);  }
   public void cleanInterfaceImageTrivias(){
     cleanTrivias();
     cleanImage();
-    ocultarBotonNuevaMision();
   }
   public void setInterfaceImageTrivias(String trivia, String country){
     setTrivia(trivia);
     setImage(country);
-    ocultarBotonNuevaMision();
-  }
-  public void setInterfaceImageTriviasComoNuevaMision(String mision, String tag){
-    setTrivia(mision);
-    mostrarBotonNuevaMision();
-    setButonNuevaMisionTag(tag);
   }
 
-
-    //INTERFACE INTRO Y MISION
+  //INTERFACE INTRO Y MISION
   public void cleanIntroSaludo(){    tvWritingIntroSaludo.setText("");  }
+  public void ocultarIntroSaludo(){  tvWritingIntroSaludo.setVisibility(View.INVISIBLE); }
+  public void mostrarIntroSaludo(){  tvWritingIntroSaludo.setVisibility(View.VISIBLE);}
   public void cleanNameDetective(){    ETdetectiveName.setText("");  }
+  public void ocultarNameDetective(){ ETdetectiveName.setVisibility(View.INVISIBLE); }
+  public void mostrarNameDetective(){  ETdetectiveName.setVisibility(View.VISIBLE); }
   public void cleanMision(){    tvMision.setText("");  }
   public void setIntroSaludo(String saludo){    tvWritingIntroSaludo.setText(saludo);  }
   public void setMision(String mision){    tvMision.setText(mision);  }
-  public void ocultarButonIniciarMision(){    btIniciarMision.setVisibility(View.INVISIBLE);  }
-  public void mostrarButonIniciarMision(){    btIniciarMision.setVisibility(View.VISIBLE);  }
+  public String getTextMision(){ return tvMision.getText().toString(); }
+  public void ocultarBotonIniciarMision(){    btIniciarMision.setVisibility(View.INVISIBLE);  }
+  public void mostrarBotonIniciarMision(){    btIniciarMision.setVisibility(View.VISIBLE);  }
+  public void setTagBotonIniciarMision(String tag){ btIniciarMision.setTag(tag);  }
+  public void setTextBotonIniciarMision(String text){ btIniciarMision.setText(text); }
   public void ocultarInterfaceIntroYMision(){    svIntroMision.setVisibility(View.INVISIBLE);  }
   public void mostrarInterfaceIntroYMision(){    svIntroMision.setVisibility(View.VISIBLE);  }
   public void cleanInterfaceIntroYMision(){
@@ -320,10 +332,21 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     cleanNameDetective();
     cleanMision();
   }
-  public void setInterfaceIntroYMision(String saludo, String mision){
-    setIntroSaludo(saludo);
+  public void setInterfaceNewMision(String mision, String tag, String text){
+    ocultarIntroSaludo();
+    ocultarNameDetective();
     setMision(mision);
+    setTagBotonIniciarMision(tag);
+    setTextBotonIniciarMision(text);
   }
+
+  //REPORTE INTERPOL
+  public void ocultarInterfaceReporteInterpol(){    svReporteInterpol.setVisibility(View.INVISIBLE);  }
+  public void mostrarInterfaceReporteInterpol(){    svReporteInterpol.setVisibility(View.VISIBLE);  }
+  public void setInterfaceReporteInterpol(String reporte){    tvReporteInterpol.setText(reporte);  }
+  public void cleanInterfaceReporteInterpol(){    tvReporteInterpol.setText("");      }
+  public String getTextReporteInterpol(){ return tvReporteInterpol.getText().toString(); }
+  public void setTextReporteInterpol(String text){ tvReporteInterpol.setText(text);}
 
   /*
   *INTERFACE DERECHA
@@ -445,46 +468,48 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     ocultarOpciones();
     cleanInterfaceImageTrivias();
     ocultarInterfaceImageTrivias();
+    cleanInterfaceReporteInterpol();
+    ocultarInterfaceReporteInterpol();
     mostrarInterfaceIntroYMision();
-    ocultarButonIniciarMision();
+    ocultarBotonIniciarMision();
   }
   public void initInterfaceTriviasAndImage(){
     mostrarOpciones();
     cleanInterfaceImageTrivias();
     mostrarInterfaceImageTrivias();
     ocultarInterfaceIntroYMision();
+    cleanInterfaceReporteInterpol();
+    ocultarInterfaceReporteInterpol();
   }
 
   //FUNCION PARA INICIAR UNA NUEVA MISION
-  public void askNewMision(){
+  public void setInterfaceAndAskNewMision(String mision, String tag, String text){
     cleanInterfacePaisYHoraActual();
     cleanInterfaceBaseDeDatos();
+
     ocultarOpciones();
+
     cleanInterfaceImageTrivias();
-    mostrarInterfaceImageTrivias();
-    ocultarInterfaceIntroYMision();
+    ocultarInterfaceImageTrivias();
+
+    cleanInterfaceReporteInterpol();
+    ocultarInterfaceReporteInterpol();
+
+    cleanInterfaceIntroYMision();
+    mostrarInterfaceIntroYMision();
+
     cleanInterfaceInfoInvestigacion();
+
+    setInterfaceNewMision(mision, tag, text);
   }
 
   public void initNewMision(){
-    ocultarOpciones();
-    mostrarInterfaceImageTrivias();
-    ocultarInterfaceIntroYMision();
     //INICIALIZAR PAISES
     initCountries();
     //INICIALIZAR SOSPECHOSOS
     initSuspects();
-
   }
 
-  //FUNCION DE RESPUESTA AL BOTON INICIAR AL FINAL DEL TEXTO MISION
-  public void initGameAfterAcceptMision(View view){
-    //ESCONDER VIEWS
-    initInterfaceTriviasAndImage();
-    setPaisActual();
-    setHoraActual();
-    setTrviasCountry();
-  }
 
   //SET LINEAR LAYOUTS INFO
   public void initInfo(){
@@ -494,6 +519,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     cleanInterfaceImageTrivias();
     ocultarInterfaceImageTrivias();
 
+    cleanInterfaceReporteInterpol();
+    ocultarInterfaceReporteInterpol();
+
     cleanInterfaceInfoInvestigacion();
     mostrarInterfaceInfoInvestigacion();
     ocultarInterfaceBaseDeDatos();
@@ -502,8 +530,18 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   }
 
   public void onClicOptions(){
+
+    mostrarInterfaceImageTrivias();
+
     cleanInterfaceInfoInvestigacion();
     mostrarInterfaceInfoInvestigacion();
+
+    cleanInterfaceReporteInterpol();
+    ocultarInterfaceReporteInterpol();
+
+    cleanInterfaceIntroYMision();
+    ocultarInterfaceIntroYMision();
+
     ocultarInterfaceBaseDeDatos();
   }
 
@@ -511,6 +549,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     cleanInterfaceInfoInvestigacion();
     ocultarInterfaceInfoInvestigacion();
     mostrarInterfaceBaseDeDatos();
+
+    cleanInterfaceReporteInterpol();
+    mostrarInterfaceReporteInterpol();
   }
 
 
@@ -547,6 +588,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   //INICIALIZAR OBJECTOS SOSPECHOSOS
   public void initSuspects(){
     objetosSuspects = new ArrayList<>();
+    paisesVisitadosLadron = new ArrayList<>();
+    lugaresInvestigar  = new ArrayList<>();
+
     objetosSuspects = UtilityClassSuspects.getInstance().getList();
 
 
@@ -556,6 +600,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     //objetosSuspects[idLadron].getClass().getMethod("setLadron").invoke(objetosSuspects[idLadron]);
     objetosSuspects.get(idLadron).setThief();
     //Object total = objetosSuspects[idLadron].getClass().getMethod("getTotalPaises").invoke(objetosSuspects[idLadron]);
+    Log.d("MAIN initSuspects", "El ladron es " + objetosSuspects.get(idLadron).getName() );
     //INICIALIZAR LOS PAISES VISITADOS SEGUN EL NIVEL DEL DETECTIVE
     objetosSuspects.get(idLadron).setVisitedCountries(Integer.parseInt(detective.getNivel()), new ArrayList<>(nombrePaises.keySet()));
 
@@ -612,7 +657,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     //LUGARES A INVESTIGAR EN EL PAIS ACTUAL
     int index = nombrePaises.get(pais);
     String[] lugares = (String[]) objetosPaises.get(index).getPlaces();
-    lugaresInvestigar = new ArrayList<String>(Arrays.asList(lugares));
+    lugaresInvestigar = Arrays.asList(lugares);
     Log.d("MAIN lugaresInvetigar", "lugaresInvetigar = " + Arrays.toString(lugares));
 
   }
@@ -644,13 +689,13 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       objetoRobado + "\n"  +
       "en " + paisActual + "\n" + "\n" +
       "se sospecha de la banda V.I.L.E." +
-      " Por favor dirijase al lugar e investigue," +
+      " Por favor dirijase al lugar, investigue y encuentre al sospechoso" +
       " tiene hasta el domingo antes de las 18:00 " + "\n" + "\n" +
       "Buena suerte";
-    //typing(texto);
+    //typing(texto, "MISION");
     setMision(texto);
     svIntroMision.fullScroll(View.FOCUS_DOWN);
-    mostrarButonIniciarMision();
+    mostrarBotonIniciarMision();
   }
 
 
@@ -658,7 +703,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   public void siguientesPaises(String paisActual){
 
     String siguientePaisLadron = null;
-    destinos = new ArrayList<String>();
+    destinos = new ArrayList<>();
 
     //Log.d("siguientesPaises", "ACTUAL = " + paisActual);
 
@@ -710,12 +755,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     String pais;
     int indexPaisAñadido = 0;
     int ingresados = 0;
-    int maximo = 0;
     int intentosPaisRelacionado = 0;
     String nivel = detective.getNivel();
     int random;
-    if(nivel.contains("1")){maximo = 2;}
-    else if(nivel.contains("2")){maximo = 3;}
     while(!terminarDeAnadir){
       if(destinos.size() > 3){
         terminarDeAnadir = true;
@@ -731,7 +773,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         paisesRelacionados = (String[]) objetosPaises.get(index).getAllRelatedCountries();
 
           //AÑADIR PAISES RELACIONADO CON EL DESTINO DEPENDIENDO DEL NIVEL
-        if (cantidadPaisesRelacionados != null && paisesRelacionados != null && ingresados < maximo
+        if (cantidadPaisesRelacionados != null && paisesRelacionados != null
         && intentosPaisRelacionado < 10) {
           random = new Random().nextInt(cantidadPaisesRelacionados - 1);
           pais = paisesRelacionados[random];
@@ -839,9 +881,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
   }
 
-
-
-
   //FUNCION QUE CAMBIA EL RELOJ SEGUN EL CALCULO DEL NUEVO TIEMPO
   public void animarReloj(Integer diferenciaReal, Integer tiempoViaje){
 
@@ -872,7 +911,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     });
 
   }
-
 
   //FUNCION QUE CAMBIARA LAS HORAS QUE PASAN DEPENDIENDO DEL LUGAR A VISITAR
   public void visitarLugar(String lugar){
@@ -909,7 +947,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     String[] personas = new String[]{"Guardia de seguridad", "Peaton", "Vendedor", "Policia local",
     "Ciclista"};
     int randomPersonas =  new Random().nextInt(personas.length);
-    int randomVestimenta =  new Random().nextInt(objetosSuspects.get(idLadron).getTotalClothing() - 1);
+
 
     int indexCountryActual = nombrePaises.get(paisActual);
 
@@ -931,26 +969,36 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       indexCountrySiguiente = nombrePaises.get(siguientePais);
 
       //MONEY
-      if(!objetosPaises.get(indexCountrySiguiente).getMoneda().contains("Dolar")){
+      if(!objetosPaises.get(indexCountrySiguiente).getMoneda().contains("Dolar") &&
+        !objetosPaises.get(indexCountrySiguiente).getMoneda().isEmpty()){
         pistas.add("Vi a alguien sospechoso queriendo cambiar Dolares a " + objetosPaises.get(indexCountrySiguiente).getMoneda());
       }
+
       //CLOTHING
-      pistas.add("Vi a alguien sospechoso que vestia " +  objetosSuspects.get(idLadron).getClothing(randomVestimenta) +" de color " +
-        objetosSuspects.get(idLadron).getClothingColor(randomVestimenta));
+      if(objetosSuspects.get(idLadron).getTotalClothing() != null){
+        int randomVestimenta =  new Random().nextInt(objetosSuspects.get(idLadron).getTotalClothing() - 1);
+        pistas.add("Vi a alguien sospechoso que vestia " +  objetosSuspects.get(idLadron).getClothing(randomVestimenta) +" de color " +
+          objetosSuspects.get(idLadron).getClothingColor(randomVestimenta));
+      }
+
       //FLAG
       pistas.add("Vi que llevaba una bandera con los colores " + objetosPaises.get(indexCountrySiguiente).getClue("flag"));
+
       //COUNTRY PRODUCTION
-      int randomProduccion =  new Random().nextInt(objetosPaises.get(indexCountrySiguiente).getCluesProd());
-      pistas.add("Escuche a alguien hablar de un pais donde se exporta " +
-        objetosPaises.get(indexCountrySiguiente).getClue("prod"+randomProduccion));
+      int randomProduccion =  new Random().nextInt(objetosPaises.get(indexCountrySiguiente).getCluesProd()) + 1;
+      if(objetosPaises.get(indexCountrySiguiente).getClue("prod"+randomProduccion) != null){
+        pistas.add("Escuche a alguien hablar de un pais donde se exporta " +
+          objetosPaises.get(indexCountrySiguiente).getClue("prod"+randomProduccion));
+      }
+
       //AUTO
-      if(!objetosSuspects.get(idLadron).getAuto().isEmpty()){
-        pistas.add("Me parecio escuchar a alguien preguntando donde podia alquilar un " + objetosSuspects.get(idLadron).getAuto());
+      if(objetosSuspects.get(idLadron).getAuto() != null & !objetosSuspects.get(idLadron).getAuto().isEmpty()){
+        pistas.add("Me parecio escuchar a alguien preguntando donde podia alquilar un/una " + objetosSuspects.get(idLadron).getAuto());
       }
       //HAIR COLOR & SEX
-      if(!objetosSuspects.get(idLadron).getHaircolor().isEmpty()){
+      if(objetosSuspects.get(idLadron).getHaircolor() != null & !objetosSuspects.get(idLadron).getHaircolor().isEmpty()){
         if(objetosSuspects.get(idLadron).getSex().contains("mujer")){
-          pistas.add("Vi a una mujer sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+          pistas.add("Vi a una mujer sospechosa con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
         }else if(objetosSuspects.get(idLadron).getSex().contains("hombre")){
           pistas.add("Vi a un hombre sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
         }else{
@@ -958,16 +1006,16 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         }
       }
       //FAVORITE FOOD
-      if(!objetosSuspects.get(idLadron).getFavoriteFood().isEmpty()){
+      if(objetosSuspects.get(idLadron).getFavoriteFood() != null & !objetosSuspects.get(idLadron).getFavoriteFood().isEmpty()){
         pistas.add("Escuche a alguien preguntando donde podia comer " + objetosSuspects.get(idLadron).getFavoriteFood());
       }
       //FEATURE
-      if(!objetosSuspects.get(idLadron).getFeature().isEmpty()){
-        pistas.add("Vi a alguien sospechoso con " + objetosSuspects.get(idLadron).getFeature());
+      if(objetosSuspects.get(idLadron).getFeature() != null & !objetosSuspects.get(idLadron).getFeature().isEmpty()){
+        pistas.add("Vi a alguien sospechoso con un " + objetosSuspects.get(idLadron).getFeature());
       }
       //HOBBIE
-      if(!objetosSuspects.get(idLadron).getHobby().isEmpty()){
-        pistas.add("Escuche a alguien hablando que le gustaba " + objetosSuspects.get(idLadron).getHobby().isEmpty());
+      if(objetosSuspects.get(idLadron).getHobby() != null & !objetosSuspects.get(idLadron).getHobby().isEmpty()){
+        pistas.add("Escuche a alguien hablando que le gustaba " + objetosSuspects.get(idLadron).getHobby());
       }
       //NADIE HA VISTO ALGO
       pistas.add("No he visto nada sospechoso por aqui.");
@@ -1000,7 +1048,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
   }
 
 
-
   //FUNCION DE RESPUESTA A BOTON CONEXIONES
   public void conexiones(View view){
     //VER POSIBLES DESTINOS
@@ -1024,19 +1071,98 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
   //FUNCION DE RESPUESTA A BOTON INTERPOL
   public void interpol(View view){
-    //1.HACER VISIBLE EL LINEARLAYOUT CON LAS OPCIONES
     setInfoSuspectstVisible();
-    //TODO:LIMPIAR INTERFACE TIVIAS, MOSTRAR REGISTRO SOSPECHOSOS EN ESE LUGAR
+
+    ocultarInterfaceIntroYMision();
+    ocultarInterfaceImageTrivias();
+    cleanInterfaceReporteInterpol();
+    mostrarInterfaceReporteInterpol();
+
   }
 
   //FUNCION DE RESPUESTA A BOTON BUSCAR
   public void buscarSospechoso(View view){
-    Log.d("INTERPOL", "Sex      = " + actvSex.getText().toString());
-    Log.d("INTERPOL", "Hobby    = " + actvHobby.getText().toString());
-    Log.d("INTERPOL", "Hair     = " + actvHair.getText().toString());
-    Log.d("INTERPOL", "Feature  = " + actvFeature.getText().toString());
-    Log.d("INTERPOL", "Auto     = " + actvAuto.getText().toString());
 
+    sospechosos = new ArrayList<>();
+
+    final Collator instance = Collator.getInstance();
+    // This strategy mean it'll ignore the accents
+    instance.setStrength(Collator.NO_DECOMPOSITION);
+
+    String dbSex = actvSex.getText().toString();
+    String dbHobby = actvHobby.getText().toString();
+    String dbHair = actvHair.getText().toString();
+    String dbFeature = actvFeature.getText().toString();
+    String dbAuto = actvAuto.getText().toString();
+
+    Log.d("INTERPOL", "Sex      = " + dbSex);
+    Log.d("INTERPOL", "Hobby    = " + dbHobby);
+    Log.d("INTERPOL", "Hair     = " + dbHair);
+    Log.d("INTERPOL", "Feature  = " + dbFeature);
+    Log.d("INTERPOL", "Auto     = " + dbAuto);
+
+    String susname, sussex, sushobby, sushairColor, susfeature, susauto;
+    Map<String, String> datosSospechoso = new HashMap<>();
+    List<Map<String, String>> suspListMap = new ArrayList<>();
+
+    //1. BUSCAR SOSPECHOSOS QUE COINCIDAN CON LA DESCRIPCION
+    for(int i = 0; i < objetosSuspects.size(); i++) {
+      datosSospechoso = objetosSuspects.get(i).basicValuesToMap();
+      suspListMap.add(datosSospechoso);
+    }
+    Stream<Map<String, String>> streamMap = suspListMap.stream();
+
+    if(dbSex != null & !dbSex.isEmpty()){
+      streamMap = streamMap.filter(map -> map.containsKey("sex") && map.get("sex").equals(dbSex));
+    }
+    if(dbHobby != null & !dbHobby.isEmpty()){
+      streamMap = streamMap.filter(map -> map.containsKey("hobby") && map.get("hobby").equals(dbHobby));
+    }
+    if(dbHair != null & !dbHair.isEmpty()){
+      streamMap = streamMap.filter(map -> map.containsKey("haircolor") && map.get("haircolor").equals(dbHair));
+    }
+    if(dbFeature != null & !dbFeature.isEmpty()){
+      streamMap = streamMap.filter(map -> map.containsKey("feature") && map.get("feature").equals(dbFeature));
+    }
+    if(dbAuto != null & !dbAuto.isEmpty()){
+      streamMap = streamMap.filter(map -> map.containsKey("auto") && map.get("auto").equals(dbAuto));
+    }
+
+    sospechosos =  streamMap.collect(Collectors.toList());
+
+
+    String mensaje;
+    String finalText;
+    //2.COSNTRUIR MENSAJE COON LOS NOMBRES DE LOS SOSPECHOSOS
+
+    //2.1 SI SON VARIOS
+    if(sospechosos.size() > 1){
+      StringBuilder stringBuilder = new StringBuilder();
+      mensaje = "Reporte de sospechosos:" + "\n" + "\n";
+      stringBuilder.append(mensaje);
+      //2.1.1 CONSTRUIR REPORTE DE NOMBRES
+      for(int i = 0; i < sospechosos.size(); i++){
+        stringBuilder.append(sospechosos.get(i).get("name")).append("\n");
+      }
+      //2.1.2 ENVIAR REPORTE AL TEXT VIEW
+      finalText = stringBuilder.toString();
+      Log.d("MAIN buscarSospechoso", "REPORTE: " + finalText);
+
+    //2.2 SI SOLO ES UNO
+    }else if(sospechosos.size() == 1){
+      detective.setSospechoso(sospechosos.get(0).get("name"));
+      finalText = "Se ha emitido una orden de captura para: " + "\n" + "\n" +
+        sospechosos.get(0).get("name");
+
+    //2.3. SI NO HAY SOSPECHOSOS
+    }else{
+      //ERROR EN LA VERIFICACION DE SOSPECHOSOS
+      finalText = "Ningun sospechoso de la banda coincide con esta descripcion";
+    }
+
+    //3. ENVIAR MENSAJE A TYPE
+    //typing(mensaje, "INTERPOL")
+    setTextReporteInterpol(finalText);
 
   }
 
@@ -1101,7 +1227,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
 
   //FUNCION QUE SIMULA EL INGRESO DEL TEXTO COMO MAQUINA DE ESCRIBIR
-  public void typing(String newText){
+  public void typing(String newText, String donde){
 
     mExecutor.execute(() -> {
       //Background work here
@@ -1110,14 +1236,26 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         char c = newText.charAt(i);
         //Process char
         StringBuilder stringBuilder = new StringBuilder();
-        String text = tvMision.getText().toString();
+        String text = "";
+        if(donde.contains("MISION")){
+          text = getTextMision();
+        }else if(donde.contains("INTERPOL")){
+          text = getTextReporteInterpol();
+        }
+
         String finalText =  stringBuilder.append(text).append(c).toString();
         //Log.d("TYPING", "Text = " + tvIntroMision.getText().toString());
         mp.start();
 
         mHandler.post(() -> {
+          if(donde.contains("MISION")){
             setMision(finalText);
             svIntroMision.fullScroll(View.FOCUS_DOWN);
+          }else if(donde.contains("INTERPOL")){
+            //ESCRIBIR REPORTE INTERPOL
+            setTextReporteInterpol(finalText);
+          }
+
         });
         mp.pause();
         try {
@@ -1176,53 +1314,47 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     Log.d("MAIN verificarFin", "horasPasadas " + horasPasadas);
     Log.d("MAIN verificarFin", "DIA = " + dia + " hora = " + hora);
     //154
-    if(horasPasadas >= 24){
+    if(horasPasadas >= 154){
+      //TODO: SPLASH SCREEN LADRON ESCAPANDO
       Log.d("MAIN verificarFin", "Es el ultimo dia de la semana " + dia + " hora = " + hora);
-      endGame();
+      String mensaje = "Los sentimos " + detective.getRank() + " no hay mas presupuesto para continuar " +
+        "con la busqueda. \n" +
+        "Parece que el ladron ha escapado. ";
+      enviarMensajeEscapo(mensaje);
     }else{
       //VERIFICAR SI SE ENCONTRO AL LADRON
       if(detective.encontrado){
         Log.d("MAIN verificarFin", "Encontrado es " +dia + " a las " + hora + " AUMENTAR NIVEL DEL DETECTIVE");
-        //aumentarNivelDetective();
-        //endGame();
+
+        if(detective.getSospechoso() != null & !detective.getSospechoso().isEmpty()){
+          //TODO: SPLASH SCREEN LADRON CORRIENDO Y DETENIDO
+          //SI HA ENCONTRADO AL LADRON Y LA DESCRIPCION COINCIDE
+          if(detective.getSospechoso().contains(objetosSuspects.get(idLadron).getName())){
+
+            Log.d("MAIN verificarFin", "Sospechoso encontrado = " + detective.getSospechoso());
+            //aumentarNivelDetective();
+            //endGame();
+          }else{
+            String mensaje = detective.getRank() + " " + detective.getName() + "\n" +
+              "Parece que el sospechoso detenido no tiene el/la " + objetoRobado + "\n" +
+              "No contamos con mas recursos para continuar con la mision";
+            setInterfaceAndAskNewMision(mensaje,"NUEVA_MISION","NUEVA_MISION");
+          }
+        }
       }
     }
-
-
-    //SI HA ENCONTRADO AL LADRON Y LA DESCRIPCION COINCIDE
-    //TODO: VERIFICAR QUE HA ENCONTRADO AL LADRON
-
   }
 
-  //FUNCION TERMINAR EL JUEGO
-  public void endGame(){
-    Log.d("END GAME", "...");
-    enviarMensajeEscapo();
-  }
+
 
   //FUNCION PARA ENVIAR EL MENSAJE QUE EL LADRON ESCAPO
-  public void enviarMensajeEscapo(){
-
-    String mensaje = "Los sentimos " + detective.getRank() + " no hay mas presupuesto para continuar " +
-      "con la busqueda. \n" +
-      "Parece que el ladron ha escapado. ";
-
+  public void enviarMensajeEscapo(String mensaje){
     mExecutor.execute(() -> {
       //Background work here
       mHandler.post(() -> {
-        askNewMision();
-        setTrivia(mensaje);
-        mostrarBotonNuevaMision();
-        setButonNuevaMisionTag("NUEVA_MISION");
-        setButonNuevaMisionText("NUEVA_MISION");
+        setInterfaceAndAskNewMision(mensaje,"NUEVA_MISION","NUEVA_MISION");
       });
     });
-  }
-
-  //FUNCION PARA REINICIAR EL JUEGO
-  public void reiniciarJuego(View view){
-    initNewMision();
-    nuevaMision();
   }
 
   //FUNCION QUE GENERA LA NUEVA MISION
@@ -1235,40 +1367,15 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       objetoRobado + "\n"  +
       "en " + paisActual + "\n" + "\n" +
       "se sospecha de la banda V.I.L.E." +
-      " Por favor dirijase al lugar e investigue," +
+      " Por favor dirijase al lugar, investigue y encuentre al sospechoso " +
       " tiene hasta el domingo antes de las 18:00 " + "\n" + "\n" +
       "Buena suerte";
 
-    cleanInterfacePaisYHoraActual();
-    cleanInterfaceImageTrivias();
-    setTrivia(mensaje);
-
-    setButonNuevaMisionTag("ACEPTAR_MISION");
-    setButonNuevaMisionText("ACEPTAR");
-
-    //btNuevaMision.setVisibility(View.INVISIBLE);
-    //btAceptarNuevaMision.setVisibility(View.VISIBLE);
-
+    setInterfaceNewMision(mensaje, "ACEPTAR_MISION", "ACEPTAR");
   }
-
-  //FUNCION ACEPTAR NUEVA MISION
-  public void aceptarNuevaMision(View view){
-    btAceptarNuevaMision.setVisibility(View.INVISIBLE);
-    //REINICIAR VALORES DETECTIVE
-    detective.initNewGame();
-    setHoraActual();
-    //SET TRIVIAS
-    setTrviasCountry();
-    //ACTIVAR O DESACTIVAR VIEWS
-    initInterfaceTriviasAndImage();
-    setPaisActual();
-
-  }
-
 
   //FUNCION QUE AUMENTA EL NIVEL DEL DETECTIVE CUANDO HA LOGRADO ENCONTRAR AL SOSPECHOSOS
   public void aumentarNivelDetective(){
-
     String name = detective.getName();
     Integer lvl = Integer.parseInt(detective.getNivel());
     String[] rangos = new String[]{"OFICIAL", "INVESTIGADOR", "INSPECTOR", "DETECTIVE"};
@@ -1277,13 +1384,6 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       editor.putString("nivel"+name, String.valueOf(lvl));
       editor.putString("rank"+name, rangos[lvl-1]);
     }
-  }
-
-  //FUNCION TERMINAR THREAD RELOJ
-  public void terminarThreadReloj(){
-    //mHandler.removeCallbacks(runnableReloj);
-    //threadReloj.interrupt();
-    //threadReloj = null;
   }
 
   @Override

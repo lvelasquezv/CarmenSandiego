@@ -117,7 +117,7 @@ public class Suspects {
       numberCountries = 4;
     }
 
-    Log.d("Suspects setVisitedCountries", "L117 visitedCountries = " + visitedCountries);
+    //Log.d("Suspects setVisitedCountries", "L117 visitedCountries = " + visitedCountries);
     int random;
     String country;
     int addCountry = 0;
@@ -129,7 +129,22 @@ public class Suspects {
 
   }
 
+  //BASIC DATA TO MAP
+  public Map<String, String> basicValuesToMap(){
+    Map<String, String> datos = new HashMap<>();
+    datos.put("name", name);
+    datos.put("sex", sex);
+    datos.put("hobby", hobby);
+    datos.put("haircolor", haircolor);
+    datos.put("feature", feature);
+    datos.put("auto", auto);
 
+    return datos;
+  }
+
+
+
+  //VALUES TO JSON
   public String suspectToJSON(){
 
     Map<String, Map<String, String>> resumenMap = new HashMap<>();

@@ -9,6 +9,7 @@
     android:background="@color/Argent"
     tools:context=".MainActivity">
 
+    <!--MAIN LINEAR LAYOUT SE DIVIDE EN 2 IZQ Y DER-->
     <LinearLayout
         android:id="@+id/LLMaster"
         android:layout_width="match_parent"
@@ -20,6 +21,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/GLMasterOptions">
 
+        <!--INTERFACE IZQUIERDO-->
+        <!-- MAIN LINEAR LAYOUT IZQUIERDO SE DIVIDE EN SUPERIOR E INFERIOR-->
         <LinearLayout
             android:id="@+id/LLIzquierdo"
             android:layout_width="0dp"
@@ -27,6 +30,7 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
+            <!--LINEAR LAYOUT IZQUIERDO SUPERIOR-->
             <LinearLayout
                 android:id="@+id/llPaisActualYHora"
                 android:layout_width="match_parent"
@@ -55,6 +59,7 @@
                 </TextView>
             </LinearLayout>
 
+            <!--RELATIVE LAYOUT IZQUIERDO INFERIOR SE DIVIDE EN 3 SCROLL VIEWS-->
             <RelativeLayout
                 android:id="@+id/RLIzqInf"
                 android:layout_width="match_parent"
@@ -64,6 +69,7 @@
 
                 android:background="@drawable/round_shape_rect">
 
+                <!--SCROLL VIEW 1 TRIVIAS & IMAGEN PAIS -->
                 <ScrollView
                     android:id="@+id/SVImageTrivias"
                     android:layout_width="match_parent"
@@ -86,7 +92,6 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:visibility="visible">
-
                         <TextView
                             android:id="@+id/tvTextTrivias"
                             style="@style/TextInGame"
@@ -95,53 +100,16 @@
                             android:layout_gravity="center"
                             android:text="ImagenDelPaisOLugar">
                         </TextView>
-
                         <ImageView
                             android:id="@+id/ivCountry"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
                         </ImageView>
-
-                        <Button
-                            android:id="@+id/btNuevaMision"
-                            android:tag="NuevaMision"
-                            android:layout_width="wrap_content"
-                            android:layout_height="@dimen/alturaViewsMin"
-                            android:layout_marginTop="16dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginEnd="8dp"
-                            android:layout_gravity="center"
-                            android:visibility="invisible"
-                            android:background="@drawable/round_shape_rect"
-                            android:text="NUEVA MISION"
-                            style="@style/TextInGameInterpol"
-                            android:onClick="reiniciarJuego">
-                        </Button>
-
-                        <!--
-                        <Button
-                            android:id="@+id/btAceptarNuevaMision"
-                            android:layout_width="wrap_content"
-                            android:layout_height="@dimen/alturaViewsMin"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginEnd="8dp"
-                            android:layout_gravity="center"
-                            android:visibility="invisible"
-                            android:background="@drawable/round_shape_rect"
-                            android:text="ACEPTAR"
-                            style="@style/TextInGameInterpol"
-                            android:onClick="aceptarNuevaMision">
-                        </Button>
-                        -->
-
                     </LinearLayout>
-
                 </ScrollView>
 
 
-
-
+                <!-- SCROLL VIEW 2 MISIONES-->
                 <ScrollView
                     android:id="@+id/SVIntroDetective"
                     android:layout_width="match_parent"
@@ -201,14 +169,42 @@
                             android:layout_gravity="center"
                             android:background="@drawable/round_shape_rect"
                             android:text="INICIAR"
-                            style="@style/TextInGameInterpol"
-                            android:onClick="initGameAfterAcceptMision">
+                            style="@style/TextInGameInterpol">
                         </Button>
                     </LinearLayout>
                 </ScrollView>
+
+                <!-- SCROLL VIEW 3 REPORTE INTERPOL -->
+                <ScrollView
+                    android:id="@+id/SVReporteInterpol"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/marginsLayouts"
+
+                    android:visibility="invisible"
+
+                    android:fadeScrollbars="false"
+                    android:scrollbarAlwaysDrawVerticalTrack="true"
+                    android:scrollbarFadeDuration="50000"
+
+                    android:scrollbarSize="4dp"
+
+                    android:scrollbarThumbVertical="@color/Gray">
+
+                    <TextView
+                        android:id="@+id/TVReporteInterpol"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="viewStart"
+                        android:text=""
+                        style="@style/TextInGameDetective">
+                    </TextView>
+                </ScrollView>
+
             </RelativeLayout>
         </LinearLayout>
 
+        <!--MAIN LINEAR LAYOUT DERECHO SE DIVIDE EN 2 -->
         <LinearLayout
             android:id="@+id/LLDerecho"
             android:layout_width="0dp"
@@ -224,6 +220,8 @@
 
                 android:background="@drawable/round_shape_rect">
 
+                <!--DIV 1 -->
+                <!--TEXT VIEW CON LAS PISTAS DE LA INVESTIGACION -->
                 <TextView
                     android:id="@+id/TVInfoInvestigation"
                     android:layout_width="match_parent"
@@ -233,6 +231,8 @@
                     style="@style/TextInGame">
                 </TextView>
 
+                <!--DIV 2 -->
+                <!--TEXT VIEW CON EL TITULO DE LA BASE DE DATOS -->
                 <TextView
                     android:id="@+id/TVInfoSuspectsTitulo"
                     style="@style/TextInGame"
@@ -241,9 +241,9 @@
                     android:layout_marginBottom="@dimen/marginsLayouts"
                     android:text="BASE DE DATOS \n INTERPOL"
                     android:visibility="invisible">
-
                 </TextView>
 
+                <!-- SCROLL VIEW CON LA INFORMACION A LLENAR DEL SOSPECHOSO -->
                 <ScrollView
                     android:id="@+id/SVInfoSuspects"
                     android:layout_width="match_parent"
@@ -416,6 +416,7 @@
                         </LinearLayout>
 
                         <Button
+                            android:id="@+id/btBuscarInterpol"
                             android:layout_width="wrap_content"
                             android:layout_height="@dimen/alturaViewsMin"
                             android:layout_marginTop="16dp"
@@ -436,6 +437,7 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!--GRID LAYOUT OPCIONES NAVEGACION EN JUEGO -->
     <GridLayout
         android:id="@+id/GLMasterOptions"
         android:layout_width="match_parent"

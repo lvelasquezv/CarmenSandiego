@@ -59,6 +59,7 @@ public class Detective {
 
   public Boolean getEncontrado(){ return encontrado; }
   public Integer getTotalHours(){ return totalHours; }
+  public String getSospechoso(){  return sospechoso;}
 
 
   public void setName(String name){ this.name = name;   }
@@ -74,6 +75,7 @@ public class Detective {
   public void setPaisesEnLaRutaLadron(Boolean rutaLadron){ this.paisesEnLaRutaLadron.add(rutaLadron); }
 
   public void setEncontrado(Boolean encontrado){ this.encontrado = encontrado; }
+  public void setSospechoso(String name){ this.sospechoso = name; }
 
   public void addTime(Integer add){ this.totalHours += add; }
   public void initTotalHours(){ this.totalHours = 0; }
@@ -85,9 +87,10 @@ public class Detective {
     this.hourToShow = "9";
     this.ampm = "A.M.";
     this.dia = "LUNES";
-    this.paisesVisitados = new ArrayList<String>();
+    this.paisesVisitados = new ArrayList<>();
     this.paisesEnLaRutaLadron = new ArrayList<>();
     this.encontrado = false;
+    this.sospechoso = "";
   }
 
 
