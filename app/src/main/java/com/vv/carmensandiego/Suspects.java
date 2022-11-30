@@ -47,10 +47,10 @@ public class Suspects {
   public void setClothingRandom(){
     int random;
     for (int i = 0; i <= 2; i++) {
-      random = new Random().nextInt((Util.clothings.length));
-      this.clothing.add(Util.clothings[random]);
-      random = new Random().nextInt((Util.clothingColors.length));
-      this.clothingColor.add(Util.clothingColors[random]);
+      random = new Random().nextInt((Util.clothings.size()));
+      this.clothing.add(Util.clothings.get(random));
+      random = new Random().nextInt((Util.clothingColors.size()));
+      this.clothingColor.add(Util.clothingColors.get(random));
     }
   }
 

@@ -24,13 +24,68 @@ import java.util.Random;
 public class Util{
 
   //CARACTERISTICAS DE LOS SOSPECHOSOS
-  public static final String[] sexs = {"male", "female", "non binary"};
-  public static final String[] hobbys = {"tennis", "music", "mt climbing", "skydiving", "swimming", "croquet", "football"};
-  public static final String[] haircolors = {"brown","blond","red","black"};
-  public static final String[] features = {"limps", "ring", "tattoo", "scar", "jewelry","eye patch"};
-  public static final String[] autos = {"convertible","limousine","race car", "motorcycle"};
-  public static final String[] clothings = {"Jacket", "jeans", "suit", "cap", "scarf", "boots", "coat", "tennis", "hat"};
-  public static final String[] clothingColors = {"white", "red", "black", "gray", "dark blue"};
+  public static List<String> sexs;
+  public static List<String> hobbies;
+  public static List<String> haircolors;
+  public static List<String> features;
+  public static List<String> autos;
+  public static List<String> clothings;
+  public static List<String> clothingColors;
+
+  //FUNCIONES DE CONSTRUCCION DE CARACTERISTICAS DE SOSPECHOSOS SEGUN DATOS CARGADOS
+  public static void initSexs(){    sexs = new ArrayList<>();  }
+  public static void constructSexs(String type){
+    if(!sexs.contains(type)){ sexs.add(type); }
+  }
+  public static void initHobbies(){ hobbies = new ArrayList<>(); }
+  public static void constructHobbies(String hobby){
+    if(!hobbies.contains(hobby)){ hobbies.add(hobby); }
+  }
+  public static void initHairColors(){ haircolors = new ArrayList<>(); }
+  public static void constructHaircolors(String color){
+    if(!haircolors.contains(color)){ haircolors.add(color); }
+  }
+  public static void initFeatures(){ features= new ArrayList<>(); }
+  public static void constructFeatures(String feature){
+    if(!features.contains(feature)){ features.add(feature); }
+  }
+  public static void initAutos(){ autos = new ArrayList<>(); }
+  public static void constructAutos(String auto){
+    if(!autos.contains(auto)){ autos.add(auto); }
+  }
+  public static void initClothings(){
+    clothings = new ArrayList<>();
+    clothings.add("saco");
+    clothings.add("traje");
+    clothings.add("gorrra");
+    clothings.add("sombrero");
+    clothings.add("botas");
+  }
+  public static void constructClothings(String cloth){
+    if(!clothings.contains(cloth)){ clothings.add(cloth); }
+  }
+  public static void initClothingsColor(){
+    clothingColors = new ArrayList<>();
+    clothingColors.add("blanco");
+    clothingColors.add("rojo");
+    clothingColors.add("negro");
+    clothingColors.add("gris");
+    clothingColors.add("azul");
+  }
+  public static void constructClothingsColors(String color){
+    if(!clothingColors.contains(color)){ clothingColors.add(color); }
+  }
+
+  public static void initSuspectCharacteristics(){
+    initSexs();
+    initHobbies();
+    initHairColors();
+    initFeatures();
+    initAutos();
+    initClothings();
+    initClothingsColor();
+  }
+
 
   //PAISES
   public static final String[] nombreObjetoPaises = {"Argentina",

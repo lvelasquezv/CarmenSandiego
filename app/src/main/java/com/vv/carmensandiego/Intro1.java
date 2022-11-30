@@ -34,6 +34,8 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
     mainIntent = new Intent(this, MainActivity.class);
     mainIntent.putExtra("EXTRA_FROM_INTENT", "INTRO");
 
+    //CARACTERUSTICAS DE LOS SOSPECHOSOS
+    Util.initSuspectCharacteristics();
     //CARGAR DATOS DE FIREBASE
     dataFromFirebaseCountries();
     dataFromFirebaseSuspects();
@@ -153,6 +155,7 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
     for(String key : data.keySet()){
       //Log.d("INTRO1 onSuccesFirebaseSuspects", "Suspect " + name + " " + key + " " + data.get(key));
       if(key.contains("sex")){
+        Util.constructSexs((String) data.get(key));
         vileBand.get(suspectNumber).setSex((String) data.get(key));
       }else if(key.contains("age")){
         vileBand.get(suspectNumber).setAge((String) data.get(key));
@@ -161,19 +164,25 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
       }else if(key.contains("weight")) {
         vileBand.get(suspectNumber).setWeight((String) data.get(key));
       }else if(key.contains("haircolor")) {
+        Util.constructHaircolors((String) data.get(key));
         vileBand.get(suspectNumber).setHaircolor((String) data.get(key));
       }else if(key.contains("hobby")) {
+        Util.constructHobbies((String) data.get(key));
         vileBand.get(suspectNumber).setHobby((String) data.get(key));
       }else if(key.contains("favoritefood")) {
         vileBand.get(suspectNumber).setFavoriteFood((String) data.get(key));
       }else if(key.contains("feature")) {
+        Util.constructFeatures((String) data.get(key));
         vileBand.get(suspectNumber).setFeature((String) data.get(key));
       }else if(key.contains("auto")) {
+        Util.constructAutos((String) data.get(key));
         vileBand.get(suspectNumber).setAuto((String) data.get(key));
       }else if(key.contains("clothing")) {
         randomClothing = false;
+        Util.constructClothings((String) data.get(key));
         vileBand.get(suspectNumber).setClothing((String) data.get(key));
       }else if(key.contains("color")) {
+        Util.constructClothingsColors((String) data.get(key));
         vileBand.get(suspectNumber).setClothingColor((String) data.get(key));
       }
     }
@@ -197,7 +206,7 @@ public class Intro1 extends AppCompatActivity implements FirebaseListener{
   //FUNCION QUE HACE CUANDO FALLA LA CARGA DE DATOS DE FIREBASE
   public void onFailFirebaseData(String from){
     //CARGAR UN JASON CON LA ULTIMA INFORMACION CARGADA DE CADA PAIS
-    //TODO CARGAR INFORMACION CUANDO FALLA LA CONEXION CON FIREBASE POSIBLEMENTE DETENER LA CARGA
+    //TODO: CARGAR INFORMACION CUANDO FALLA LA CONEXION CON FIREBASE POSIBLEMENTE DETENER LA CARGA
   }
 
 }

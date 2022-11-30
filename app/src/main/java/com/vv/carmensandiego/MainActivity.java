@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     ArrayAdapter<String> adapter;
     adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.sexs);
     actvSex.setAdapter(adapter);
-    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.hobbys);
+    adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.hobbies);
     actvHobby.setAdapter(adapter);
     adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Util.haircolors);
     actvHair.setAdapter(adapter);
@@ -763,8 +763,8 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         terminarDeAnadir = true;
       }else{
         //Log.d("siguientesPaises", "destinos[" +indexPaisAñadido+"] = " + destinos.get(indexPaisAñadido) );
-        Log.d("siguientesPaises", "indexPaisAñadido = "+indexPaisAñadido);
-        Log.d("siguientesPaises", "destinos = "+destinos.get(indexPaisAñadido));
+        //Log.d("siguientesPaises", "indexPaisAñadido = "+indexPaisAñadido);
+        //Log.d("siguientesPaises", "destinos = "+destinos.get(indexPaisAñadido));
         String keyInNombrePaises = encontrarIndexNombrePaises(destinos.get(indexPaisAñadido));
         Log.d("siguientesPaises", "keyInNombrePaises = " + keyInNombrePaises);
         index = nombrePaises.get(keyInNombrePaises);
@@ -971,11 +971,12 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       //MONEY
       if(!objetosPaises.get(indexCountrySiguiente).getMoneda().contains("Dolar") &&
         !objetosPaises.get(indexCountrySiguiente).getMoneda().isEmpty()){
-        pistas.add("Vi a alguien sospechoso queriendo cambiar Dolares a " + objetosPaises.get(indexCountrySiguiente).getMoneda());
+        pistas.add("Vi a alguien sospechoso queriendo cambiar dolares a " + objetosPaises.get(indexCountrySiguiente).getMoneda());
       }
 
       //CLOTHING
       if(objetosSuspects.get(idLadron).getTotalClothing() != null){
+        //TODO:SI CLOTHING = 1
         int randomVestimenta =  new Random().nextInt(objetosSuspects.get(idLadron).getTotalClothing() - 1);
         pistas.add("Vi a alguien sospechoso que vestia " +  objetosSuspects.get(idLadron).getClothing(randomVestimenta) +" de color " +
           objetosSuspects.get(idLadron).getClothingColor(randomVestimenta));
@@ -993,18 +994,30 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
       //AUTO
       if(objetosSuspects.get(idLadron).getAuto() != null & !objetosSuspects.get(idLadron).getAuto().isEmpty()){
-        pistas.add("Me parecio escuchar a alguien preguntando donde podia alquilar un/una " + objetosSuspects.get(idLadron).getAuto());
+        pistas.add("Me parecio escuchar a alguien preguntando donde podia alquilar un auto tipo " + objetosSuspects.get(idLadron).getAuto());
       }
+
       //HAIR COLOR & SEX
-      if(objetosSuspects.get(idLadron).getHaircolor() != null & !objetosSuspects.get(idLadron).getHaircolor().isEmpty()){
-        if(objetosSuspects.get(idLadron).getSex().contains("mujer")){
-          pistas.add("Vi a una mujer sospechosa con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
-        }else if(objetosSuspects.get(idLadron).getSex().contains("hombre")){
-          pistas.add("Vi a un hombre sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+      if(objetosSuspects.get(idLadron).getHaircolor() != null){
+        if(!objetosSuspects.get(idLadron).getHaircolor().isEmpty()){
+          if(objetosSuspects.get(idLadron).getSex().contains("mujer")){
+            pistas.add("Vi a una mujer sospechosa con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+          }else if(objetosSuspects.get(idLadron).getSex().contains("hombre")){
+            pistas.add("Vi a un hombre sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+          }else{
+            pistas.add("Vi a alguien sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+          }
         }else{
-          pistas.add("Vi a alguien sospechoso con cabello de color " + objetosSuspects.get(idLadron).getHaircolor());
+          if(objetosSuspects.get(idLadron).getSex().contains("mujer")){
+            pistas.add("Vi a una mujer sospechosa sin cabello");
+          }else if(objetosSuspects.get(idLadron).getSex().contains("hombre")){
+            pistas.add("Vi a un hombre sospechoso sin cabello");
+          }else{
+            pistas.add("Vi a alguien sospechoso sin cabello");
+          }
         }
       }
+
       //FAVORITE FOOD
       if(objetosSuspects.get(idLadron).getFavoriteFood() != null & !objetosSuspects.get(idLadron).getFavoriteFood().isEmpty()){
         pistas.add("Escuche a alguien preguntando donde podia comer " + objetosSuspects.get(idLadron).getFavoriteFood());
@@ -1027,7 +1040,8 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
         pistas.add("Ahi esta quien buscas!");
         String mensajeFinal = "Ladron Encontrado";
         detective.setEncontrado(true);
-        Util.makeToast(this, mensajeFinal, 1);
+        verificarFin();
+
       }else{
         pistas.add("Hace poco vi a alguien sospechoso por acá");
         pistas.add("me parecio haber visto el " + objetoRobado);
@@ -1147,6 +1161,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       //2.1.2 ENVIAR REPORTE AL TEXT VIEW
       finalText = stringBuilder.toString();
       Log.d("MAIN buscarSospechoso", "REPORTE: " + finalText);
+      detective.setSospechoso("");
 
     //2.2 SI SOLO ES UNO
     }else if(sospechosos.size() == 1){
@@ -1158,6 +1173,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     }else{
       //ERROR EN LA VERIFICACION DE SOSPECHOSOS
       finalText = "Ningun sospechoso de la banda coincide con esta descripcion";
+      detective.setSospechoso("");
     }
 
     //3. ENVIAR MENSAJE A TYPE
@@ -1320,26 +1336,37 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
       String mensaje = "Los sentimos " + detective.getRank() + " no hay mas presupuesto para continuar " +
         "con la busqueda. \n" +
         "Parece que el ladron ha escapado. ";
-      enviarMensajeEscapo(mensaje);
+      enviarMensajeInterfaceIntroYMision(mensaje);
     }else{
       //VERIFICAR SI SE ENCONTRO AL LADRON
       if(detective.encontrado){
         Log.d("MAIN verificarFin", "Encontrado es " +dia + " a las " + hora + " AUMENTAR NIVEL DEL DETECTIVE");
 
-        if(detective.getSospechoso() != null & !detective.getSospechoso().isEmpty()){
+        if(detective.getSospechoso() != null)
+          if(!detective.getSospechoso().isEmpty()){
           //TODO: SPLASH SCREEN LADRON CORRIENDO Y DETENIDO
           //SI HA ENCONTRADO AL LADRON Y LA DESCRIPCION COINCIDE
           if(detective.getSospechoso().contains(objetosSuspects.get(idLadron).getName())){
-
+            aumentarNivelDetective();
             Log.d("MAIN verificarFin", "Sospechoso encontrado = " + detective.getSospechoso());
-            //aumentarNivelDetective();
-            //endGame();
+            String mensaje = "Felicitaciones " + detective.getName() + " ha recuperado el " + objetoRobado +
+              " la agencia agradece su gestion y en recompensa  sera acendido a " + detective.getRank() +
+              " esperamos continue con su buena gestion ";
+            enviarMensajeInterfaceIntroYMision(mensaje);
           }else{
+            //TODO: SPLASH SCREEN LADRON CAMINANDO LIBRE
             String mensaje = detective.getRank() + " " + detective.getName() + "\n" +
               "Parece que el sospechoso detenido no tiene el/la " + objetoRobado + "\n" +
               "No contamos con mas recursos para continuar con la mision";
-            setInterfaceAndAskNewMision(mensaje,"NUEVA_MISION","NUEVA_MISION");
+            enviarMensajeInterfaceIntroYMision(mensaje);
           }
+        //HA ENCONTRADO AL LADRON PERO NO HAY DESCRIPCION DEL SOSPECHOSOS
+        }else{
+            //TODO: SPLASH SCREEN LADRON CAMINANDO LIBRE
+            String mensaje = "Lo sentimos " + detective.getRank() + " " + detective.getName() + "\n" +
+              "Sin una orden de captura no podemos proceder al arresto " + "\n" +
+              "...";
+            enviarMensajeInterfaceIntroYMision(mensaje);
         }
       }
     }
@@ -1348,7 +1375,7 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
 
 
   //FUNCION PARA ENVIAR EL MENSAJE QUE EL LADRON ESCAPO
-  public void enviarMensajeEscapo(String mensaje){
+  public void enviarMensajeInterfaceIntroYMision(String mensaje){
     mExecutor.execute(() -> {
       //Background work here
       mHandler.post(() -> {
@@ -1382,7 +1409,9 @@ public class MainActivity extends AppCompatActivity implements ThreadReloj{
     if(lvl <= 4){
       lvl++;
       editor.putString("nivel"+name, String.valueOf(lvl));
+      detective.setNivel(String.valueOf(lvl));
       editor.putString("rank"+name, rangos[lvl-1]);
+      detective.setRank( rangos[lvl-1] );
     }
   }
 
